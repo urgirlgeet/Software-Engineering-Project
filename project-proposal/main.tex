@@ -1,0 +1,477 @@
+\documentclass[11pt,a4paper]{article}
+
+% -------------------- Packages --------------------
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{times}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+% -------------------- General Formatting --------------------
+\setstretch{1.15}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% -------------------- Heading Formatting --------------------
+% Main headings: 16 pt
+\titleformat{\section}
+  {\fontsize{16}{19}\selectfont\bfseries}
+  {\thesection.}
+  {0.5em}
+  {}
+
+% Subheadings: 16 pt
+\titleformat{\subsection}
+  {\fontsize{16}{19}\selectfont\bfseries}
+  {\thesubsection}
+  {0.5em}
+  {}
+
+% -------------------- Lists --------------------
+\setlist[itemize]{
+    leftmargin=1.5em,
+    itemsep=2pt,
+    topsep=2pt
+}
+
+% -------------------- Document --------------------
+\begin{document}
+
+% =========================================================
+% TITLE PAGE
+% =========================================================
+
+\begin{center}
+
+{\fontsize{20}{24}\selectfont\bfseries GATED}
+
+\vspace{0.5cm}
+
+{\fontsize{18}{22}\selectfont\bfseries
+Apartment Tracker: A Smart Residential Society Management System
+}
+
+\vspace{0.5cm}
+
+{\fontsize{14}{17}\selectfont
+Project Proposal for UCS503P
+}
+
+\vfill
+
+\textbf{Submitted to:}
+
+Thapar Institute of Engineering and Technology
+
+\vspace{0.5cm}
+
+\textbf{Submitted by:}
+
+Geetika Parakh\\
+Ridham Sharma\\
+Khushi Dangi\\
+Harnoor Singh
+
+\vfill
+
+August 19, 2026
+
+\end{center}
+
+\newpage
+
+% =========================================================
+% 1. HIGHER-ORDER GOAL
+% =========================================================
+
+\section{Higher-Order Goal}
+
+The broader goal of this project is to improve the efficiency, transparency, and organisation of residential society management by reducing dependence on fragmented manual processes such as WhatsApp communication, spreadsheets, paper registers, and manual records.
+
+The objective is to develop a centralised web-based platform that integrates common residential society workflows for residents, administrators, security guards, and maintenance staff with the aim of providing structured, role-specific access to various operations within a society.
+
+% =========================================================
+% 2. PROBLEM STATEMENT
+% =========================================================
+
+\section{Problem Statement}
+
+Residential societies frequently rely on disconnected, manual systems to manage day-to-day operations. This creates several issues:
+
+\begin{itemize}
+
+    \item \textbf{Fragmented communication:} Requests and information are distributed across multiple channels.
+
+    \item \textbf{Delayed complaint resolution:} Maintenance complaints may be difficult to assign and track.
+
+    \item \textbf{Poor transparency:} Residents may not have a centralised view of complaint or payment status.
+
+    \item \textbf{Manual visitor management:} Physical registers make visitor verification and record maintenance inefficient and cause delays.
+
+    \item \textbf{Billing errors:} Manual generation and tracking of maintenance bills can lead to inconsistencies.
+
+    \item \textbf{Booking conflicts:} Manual facility reservations can result in overlapping bookings.
+
+    \item \textbf{Poor record management:} Society information is distributed across multiple systems, which makes it difficult to access.
+
+\end{itemize}
+
+These problems create a need for a centralised platform that can coordinate society operations while providing appropriate access to each stakeholder.
+
+% =========================================================
+% 3. OBJECTIVES
+% =========================================================
+
+\section{Objectives}
+
+The primary objectives of Apartment Tracker are:
+
+\begin{itemize}
+
+    \item To digitise common residential society management activities.
+
+    \item To provide a centralised platform for residents, administrators, security guards, and maintenance staff.
+
+    \item To simplify complaint registration, assignment, and tracking.
+
+    \item To improve visitor verification through digital visitor passes and QR codes.
+
+    \item To provide transparency in maintenance billing and facility booking.
+
+    \item To maintain centralised digital records of society operations.
+
+    \item To improve operational efficiency through role-based workflows.
+
+    \item To develop a modular architecture that can support future expansion.
+
+\end{itemize}
+
+% =========================================================
+% 4. PROPOSED SOLUTION
+% =========================================================
+
+\section{Proposed Solution}
+
+\subsection{Overview}
+
+Apartment Tracker will be developed as a centralised web-based residential society management system. It will provide different interfaces and permissions based on the user's role.
+
+Residents will be able to perform everyday tasks like raise and track complaints, invite visitors, book facilities, view notices, and access maintenance bills. Administrators will manage residents, apartments, complaints, billing, facilities, parking, notices and operational information. Security guards will verify visitors and maintain entry and exit records, while maintenance staff will handle assigned complaints and update their status.
+
+The system will integrate these activities through a common backend and centralised database, which will help reduce reliance on disconnected communication and manual record-keeping methods.
+
+\subsection{Core Modules}
+
+The proposed system will consist of the following major modules:
+
+\begin{itemize}
+
+    \item \textbf{Authentication and Role Management} --- secure login and role-based access.
+
+    \item \textbf{Apartment and Resident Management} --- management of flats, residents, ownership, and occupancy.
+
+    \item \textbf{Complaint Management} --- complaint submission, assignment, status tracking, and resolution.
+
+    \item \textbf{Visitor Management} --- visitor invitations, QR-based passes, and entry/exit records.
+
+    \item \textbf{Maintenance Billing} --- bill generation, payment status, and payment history.
+
+    \item \textbf{Facility Booking} --- availability checking and conflict-free booking.
+
+    \item \textbf{Parking Management} --- resident and visitor parking allocation.
+
+    \item \textbf{Notice Board} --- publication of society announcements and notices.
+
+    \item \textbf{Notifications} --- delivery of relevant updates to users.
+
+    \item \textbf{Analytics Dashboard} --- summaries of complaints, visitors, payments, and other operations.
+
+\end{itemize}
+
+\subsection{Core Workflow}
+
+The system will follow a role-based workflow:
+
+\begin{center}
+\textbf{
+User Login $\rightarrow$ Role-Based Dashboard $\rightarrow$ Select Service $\rightarrow$ Submit Request/Action $\rightarrow$ Backend Validation $\rightarrow$ Database Update $\rightarrow$ Administrator/Staff Action $\rightarrow$ Status Update $\rightarrow$ User Notification
+}
+\end{center}
+
+For example, the complaint workflow will follow:
+
+\begin{center}
+\textbf{
+Resident $\rightarrow$ Complaint Submitted $\rightarrow$ Administrator $\rightarrow$ Maintenance Staff Assigned $\rightarrow$ In Progress $\rightarrow$ Resolved $\rightarrow$ Closed
+}
+\end{center}
+
+Similarly, visitor management will follow:
+
+\begin{center}
+\textbf{
+Resident $\rightarrow$ Visitor Invitation $\rightarrow$ QR Pass Generated $\rightarrow$ Security Verification $\rightarrow$ Entry Recorded $\rightarrow$ Exit Recorded
+}
+\end{center}
+
+Facility booking will check the availability before confirming a reservation to prevent double booking.
+
+% =========================================================
+% 5. SOLUTION APPROACH
+% =========================================================
+
+\section{Solution Approach}
+
+\subsection{Web Architecture}
+
+Apartment Tracker will use a three-tier web architecture consisting of:
+
+\begin{center}
+\textbf{
+Presentation Layer $\rightarrow$ Business Logic Layer $\rightarrow$ Data Layer
+}
+\end{center}
+
+The frontend will provide role-specific interfaces for different users. The backend will handle authentication, authorisation, business workflows, API requests, and validation. The database will store centralised records for users, apartments, complaints, visitors, bills, bookings, notices, and other system entities.
+
+The architecture separates the major responsibilities of the system, making the application easier to develop, test, maintain and extend in future.
+
+\subsection{Technology Stack}
+
+The proposed technology stack is:
+
+\begin{itemize}
+
+    \item \textbf{Frontend:} React.js, TypeScript, Tailwind CSS, React Router, Axios
+
+    \item \textbf{Backend:} Node.js, Express.js
+
+    \item \textbf{Database:} MongoDB Atlas
+
+    \item \textbf{Authentication:} JWT, bcrypt
+
+    \item \textbf{File Storage:} Cloudinary
+
+    \item \textbf{Notifications:} Nodemailer
+
+    \item \textbf{Deployment:} Vercel and Render
+
+\end{itemize}
+
+The selected technologies are based on the skillset of the team and are well-established web development tools, suitable for implementing the project's modular requirements.
+
+\subsection{Security and System Correctness}
+
+Security and correctness will be considered throughout the development process. The system will use JWT-based authentication, password hashing, role-based authorisation, input validation and file validation to maintain correctness. System-level constraints will also be enforced. Features like facility booking will validate slot availability to prevent double booking, while visitor QR codes will use controlled verification and expiry mechanisms to prevent any bypassers.
+
+% =========================================================
+% 6. FEASIBILITY ANALYSIS
+% =========================================================
+
+\section{Feasibility Analysis}
+
+\subsection{Technical Feasibility}
+
+The project is technically feasible because its core functionality can be implemented with well-developed web technologies. React, Node.js, Express, MongoDB, JWT and supporting libraries provide the capabilities needed for primary processes like authentication, database management, REST APIs, QR code generation, file handling and dashboard development.
+
+The project does not require specialised hardware or experimental algorithms for its core implementation. Its modular structure also allows different components to be developed and tested incrementally.
+
+Cloud deployment with Vercel, Render, and MongoDB Atlas further reduces the academic prototype's infrastructure requirements.
+
+\textbf{Conclusion:} The project is technically feasible with the proposed technology stack and infrastructure.
+
+\subsection{Economic Feasibility}
+
+The project is economically feasible because development will primarily rely on open-source technologies and widely available development tools. The proposed architecture does not require dedicated physical servers or expensive proprietary software for the academic prototype.
+
+Cloud services with suitable free or development tiers can be used during development and testing, keeping initial infrastructure requirements low.
+
+\textbf{Conclusion:} The project can be developed with relatively low infrastructure and software costs and is economically feasible as an academic project.
+
+\subsection{Operational Feasibility}
+
+The proposed system is operationally feasible because it is working on digitising activities that already exist in residential societies rather than introducing entirely new processes.
+
+Residents can continue to perform familiar day-to-day activities, such as filing complaints, inviting visitors, booking facilities and viewing bills, through a centralised interface. Administrators, security guards and maintenance staff receive interfaces corresponding to their existing responsibilities.
+
+The system, therefore, aims to reduce manual effort while improving coordination and transparency, without fundamentally changing stakeholders' roles.
+
+\textbf{Conclusion:} The system is operationally feasible and can support all the major existing workflows of a residential society.
+
+\subsection{Schedule Feasibility}
+
+The project is planned as a 6-month semester-long development effort. Development will be carried out incrementally with regular updates on all core concepts weekly.
+
+To control project scope, core functionality will be prioritised over advanced features. This allows a working MVP to be completed even if some secondary modules require additional development time.
+
+\textbf{Conclusion:} The project is schedule-feasible provided that the MVP is prioritised and development progresses incrementally.
+
+\subsection{Security and Legal Feasibility}
+
+The system will handle information such as resident details, visitor information, complaints, images, and billing records. Therefore, only information necessary for system functionality should be collected and stored.
+
+Authentication, authorisation, password hashing, input validation and file validation will be used to protect system resources. Visitor information will be handled with controlled access, and QR-based visitor passes will include verification and expiry mechanisms. This will avoid any breach of private data.
+
+The system is intended initially as an academic prototype only.
+
+\textbf{Conclusion:} The project is security-feasible, provided appropriate data-handling, authentication, authorisation, and validation practices are followed.
+
+% =========================================================
+% 7. EVALUATION CRITERIA
+% =========================================================
+
+\section{Evaluation Criteria}
+
+\subsection{Primary Evaluation Metrics}
+
+The primary evaluation of the system will focus on whether it improves the efficiency of important society workflows.
+
+The following metrics will be considered:
+
+\begin{itemize}
+
+    \item \textbf{Complaint processing time:} Time between complaint submission and assignment/status update.
+
+    \item \textbf{Visitor verification time:} Time required to verify a visitor using the QR-based process.
+
+    \item \textbf{Booking conflict rate:} Number of conflicting facility bookings after system implementation.
+
+\end{itemize}
+
+\subsection{Secondary Evaluation Metrics}
+
+Additional metrics will include:
+
+\begin{itemize}
+
+    \item API response time for common operations.
+
+    \item System availability during the evaluation period.
+
+    \item Successful completion rate of major user workflows.
+
+    \item User-reported ease of use and clarity.
+
+    \item Number of manual steps eliminated from selected workflows.
+
+\end{itemize}
+
+\subsection{Validation Plan}
+
+The system will be evaluated using representative users or simulated stakeholder roles, including residents, administrators, security guards, and maintenance staff.
+
+Users will perform common workflows such as submitting a complaint, verifying a visitor, booking a facility, and viewing a bill. System logs will be used to measure workflow performance, while user feedback will be collected to evaluate usability and clarity.
+
+The evaluation will compare the effectiveness of the centralised workflows against the corresponding manual processes.
+
+% =========================================================
+% 8. SCALABILITY
+% =========================================================
+
+\section{Scalability}
+
+The system will be designed with scalability in mind, so that increases in residents, complaints, visitors, bookings, and other records do not require major architectural changes.
+
+The separation of frontend and backend components will allow individual layers to be scaled independently. Database indexing and efficient queries can support frequent access to information, while pagination can be used for large lists such as complaints, visitors, and activity records.
+
+The stateless nature of REST APIs and cloud-based deployment will also support the system's future expansion.
+
+The modular architecture allows additional functionality, such as mobile applications, AI-based classification, IoT integration, and automated security systems to be added in future iterations.
+
+% =========================================================
+% 9. PROJECT SCOPE AND DELIVERABLES
+% =========================================================
+
+\section{Project Scope and Deliverables}
+
+\subsection{Initial Deliverable}
+
+The initial working version will prioritise the core society workflows:
+
+\begin{itemize}
+
+    \item User authentication and role-based access.
+
+    \item Apartment and resident management.
+
+    \item Complaint submission and tracking.
+
+    \item Complaint assignment and status updates.
+
+    \item Visitor invitation and QR-based verification.
+
+    \item Facility availability and booking.
+
+    \item Basic notice management.
+
+    \item Centralised database and REST APIs.
+
+    \item Basic logging and system validation.
+
+    \item Deployment of the working application.
+
+\end{itemize}
+
+\subsection{Subsequent Deliverables}
+
+Subsequent iterations will extend the system with:
+
+\begin{itemize}
+
+    \item Maintenance billing and payment tracking.
+
+    \item Parking management.
+
+    \item Notifications.
+
+    \item Analytics dashboard.
+
+    \item Improved search and filtering.
+
+    \item Additional reporting and administrative features.
+
+\end{itemize}
+
+The division between initial and subsequent deliverables allows the team to prioritise a functional core system while retaining scope for additional features.
+
+% =========================================================
+% 10. RISKS AND MITIGATIONS
+% =========================================================
+
+\section{Risks and Mitigations}
+
+\begin{itemize}
+
+    \item \textbf{Scope expansion:} The number of proposed modules may make it difficult to complete the project within the semester. This will be mitigated by defining an MVP and incrementally implementing secondary modules.
+
+    \item \textbf{Role-based access errors:} Incorrect permissions could expose restricted functionality. Role permissions will therefore be defined during system design and tested independently.
+
+    \item \textbf{Facility booking conflicts:} Concurrent booking requests could create double bookings. Availability will be checked and validated at the backend before confirmation.
+
+    \item \textbf{QR security:} Visitor passes could be misused if they remain valid indefinitely. QR passes will use controlled verification and expiry mechanisms.
+
+    \item \textbf{Data security:} Resident and visitor information must be protected. Authentication, password hashing, authorisation, input validation, and controlled data collection will be implemented.
+
+    \item \textbf{Integration issues:} Multiple modules depend on the same database and backend services. Modular API design and integration testing will be used to identify issues early.
+
+    \item \textbf{Deployment problems:} Deployment will be attempted before the final development stage to prevent infrastructure issues from delaying the final demonstration.
+
+\end{itemize}
+
+% =========================================================
+% 11. SUMMARY
+% =========================================================
+
+\section{Summary}
+
+Our Apartment Tracker is a centralised web-based solution to manage the functioning and day-to-day activities of a residential society, which are currently handled through manual methods, to improve efficiency, prevent delays and add ease to the overall experience of the users. It will act as a link between residents, administrators, security guards and maintenance staff, helping in managing everyday functioning.
+
+It is a feasible solution, including technical and operational feasibility, with a primary focus on delivering a functional, deployable system following an incremental development from an academic point of view, to help us learn all core concepts of software development.
+
+The evaluation matrices for the project will be based on the workflow of different operations, performance of different features and overall ease of usability.
+
+Overall, this makes the project manageable while demonstrating key concepts.
+
+\end{document}
