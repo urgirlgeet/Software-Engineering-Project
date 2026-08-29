@@ -2,6 +2,9 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
     Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -26,7 +29,7 @@ export default function SignIn() {
     try {
       setLoading(true);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
@@ -36,12 +39,26 @@ export default function SignIn() {
         return;
       }
 
-      Alert.alert("Success", "Signed in successfully!", [
-        {
-          text: "Continue",
-          onPress: () => router.replace("/dashboard"),
-        },
-      ]);
+      const { data: profile, error: profileError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (profileError) {
+        Alert.alert("Error", profileError.message);
+        return;
+      }
+
+      if (profile.role === "resident") {
+        router.replace("/resident-dashboard");
+      } else if (profile.role === "admin") {
+        router.replace("/admin-dashboard");
+      } else if (profile.role === "maintenance") {
+        router.replace("/maintenance-dashboard");
+      } else {
+        router.replace("/society");
+      }
     } catch (error) {
       Alert.alert("Error", "Something went wrong.");
     } finally {
@@ -50,7 +67,11 @@ export default function SignIn() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
+    >
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backText}>‹ Back</Text>
       </TouchableOpacity>
@@ -109,11 +130,22 @@ export default function SignIn() {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+        automaticallyAdjustKeyboardInsets
+      ></ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
+
   container: {
     flex: 1,
     backgroundColor: "#F3E8D3",
