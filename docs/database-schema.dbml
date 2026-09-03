@@ -1,0 +1,199 @@
+Table societies {
+  id uuid [pk]
+  name text
+  address text
+  city text
+  created_at timestamptz
+}
+
+Table apartments {
+  id uuid [pk]
+  society_id uuid [not null, ref: > societies.id]
+  flat_number text [not null]
+  block text
+  floor integer
+  created_at timestamptz
+}
+
+Table users {
+  id uuid [pk]
+  auth_user_id uuid [unique]
+  name text [not null]
+  phone text
+  email text [not null]
+  apartment_id uuid [ref: > apartments.id]
+  society_id uuid [not null, ref: > societies.id]
+  role text [not null]
+  created_at timestamptz
+}
+
+Table residents {
+  user_id uuid [pk, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  apartment_id uuid [not null, ref: > apartments.id]
+  created_at timestamptz
+}
+
+Table security_staff {
+  user_id uuid [pk, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  created_at timestamptz
+}
+
+Table maintenance_staff {
+  user_id uuid [pk, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  created_at timestamptz
+}
+
+Table society_admins {
+  user_id uuid [pk, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  created_at timestamptz
+}
+
+Table complaints {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  title text [not null]
+  description text [not null]
+  category text [not null]
+  priority text [not null]
+  status text [not null]
+  assigned_to uuid [ref: > users.id]
+  image_url text
+  resolution_note text
+  created_at timestamptz [not null]
+  updated_at timestamptz
+  resolved_at timestamptz
+}
+
+Table maintenance_requests {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  title text [not null]
+  description text [not null]
+  category text [not null]
+  priority text [not null]
+  status text [not null]
+  assigned_to uuid [ref: > users.id]
+  image_url text
+  resolution_note text
+  created_at timestamptz [not null]
+  updated_at timestamptz
+  resolved_at timestamptz
+}
+
+Table visitors {
+  id uuid [pk]
+  society_id uuid [not null, ref: > societies.id]
+  resident_id uuid [not null, ref: > users.id]
+  visitor_name text [not null]
+  vehicle_number text
+  status text [not null]
+  expected_at timestamptz
+  entry_time timestamptz
+  exit_time timestamptz
+  created_at timestamptz [not null]
+}
+
+Table visitor_requests {
+  id uuid [pk]
+  visitor_id uuid [not null, ref: > visitors.id]
+  resident_id uuid [not null, ref: > users.id]
+  security_id uuid [ref: > users.id]
+  status text [not null]
+  requested_at timestamptz [not null]
+  approved_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table security_logs {
+  id uuid [pk]
+  society_id uuid [not null, ref: > societies.id]
+  security_id uuid [not null, ref: > users.id]
+  visitor_id uuid [ref: > visitors.id]
+  action text [not null]
+  status text
+  timestamp timestamptz [not null]
+}
+
+Table notices {
+  id uuid [pk]
+  society_id uuid [not null, ref: > societies.id]
+  created_by uuid [not null, ref: > users.id]
+  title text [not null]
+  content text [not null]
+  priority text
+  created_at timestamptz [not null]
+  expires_at timestamptz
+}
+
+Table amenities {
+  id uuid [pk]
+  society_id uuid [not null, ref: > societies.id]
+  name text [not null]
+  description text
+  location text
+  capacity integer
+  status text [not null]
+  created_at timestamptz [not null]
+}
+
+Table amenity_bookings {
+  id uuid [pk]
+  amenity_id uuid [not null, ref: > amenities.id]
+  resident_id uuid [not null, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  booking_date date [not null]
+  start_time time [not null]
+  end_time time [not null]
+  status text [not null]
+  created_at timestamptz [not null]
+}
+
+Table payments {
+  id uuid [pk]
+  resident_id uuid [not null, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  amount numeric [not null]
+  payment_type text [not null]
+  status text [not null]
+  payment_date timestamptz
+  transaction_id text
+  created_at timestamptz [not null]
+}
+
+Table emergency_requests {
+  id uuid [pk]
+  resident_id uuid [not null, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  type text [not null]
+  description text
+  status text [not null]
+  assigned_to uuid [ref: > users.id]
+  created_at timestamptz [not null]
+  resolved_at timestamptz
+}
+
+Table notifications {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  title text [not null]
+  message text [not null]
+  type text [not null]
+  is_read boolean [not null]
+  created_at timestamptz [not null]
+}
+
+Table society_admin_requests {
+  id uuid [pk]
+  user_id uuid [not null, ref: > users.id]
+  society_id uuid [not null, ref: > societies.id]
+  status text [not null]
+  requested_at timestamptz [not null]
+  approved_at timestamptz
+  approved_by uuid [ref: > users.id]
+}
