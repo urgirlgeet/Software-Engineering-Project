@@ -62,7 +62,8 @@ export default function CompleteSignup() {
         email: email.trim(),
         phone: phone.trim(),
         society_id: societyData.id,
-        role: role,
+        role,
+        approval_status: "pending",
         apartment_number: role === "resident" ? apartment.trim() : null,
         employee_id: role !== "resident" ? employeeId.trim() : null,
       });
@@ -73,7 +74,37 @@ export default function CompleteSignup() {
       }
 
       // 4. Approval pending
-      router.replace("/pending-approval");
+      const { data: profile } = await supabase
+        .from("users")
+        .select("role, approval_status")
+        .eq("id", data.session.user.id)
+        .single();
+
+      if (!profile) {
+        router.replace("/signin");
+        return;
+      }
+
+      if (profile.approval_status === "pending") {
+        router.replace("/pending-approval");
+        return;
+      }
+
+      if (profile.approval_status === "rejected") {
+        await supabase.auth.signOut();
+        router.replace("/signin");
+        return;
+      }
+
+      if (profile.role === "resident") {
+        router.replace("/resident-dashboard");
+      } else if (profile.role === "admin") {
+        router.replace("/admin-dashboard");
+      } else if (profile.role === "maintenance") {
+        router.replace("/maintenance-dashboard");
+      } else if (profile.role === "security") {
+        router.replace("/security-dashboard" as any);
+      }
     } catch (error) {
       setError("Something went wrong while creating your account.");
     }

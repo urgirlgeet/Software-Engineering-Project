@@ -41,12 +41,27 @@ export default function SignIn() {
 
       const { data: profile, error: profileError } = await supabase
         .from("users")
-        .select("role")
+        .select("role, approval_status")
         .eq("auth_user_id", data.user.id)
         .single();
 
       if (profileError || !profile) {
         Alert.alert("Error", "User profile not found.");
+        return;
+      }
+
+      if (profile.approval_status === "pending") {
+        router.replace("/pending-approval");
+        return;
+      }
+
+      if (profile.approval_status === "rejected") {
+        await supabase.auth.signOut();
+        Alert.alert(
+          "Access denied",
+          "Your account was rejected by the society admin.",
+        );
+        router.replace("/signin");
         return;
       }
 

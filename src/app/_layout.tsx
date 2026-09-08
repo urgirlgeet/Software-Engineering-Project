@@ -14,17 +14,33 @@ export default function RootLayout() {
       if (data.session?.user) {
         const { data: profile } = await supabase
           .from("users")
-          .select("role")
+          .select("role, approval_status")
           .eq("id", data.session.user.id)
           .single();
 
-        if (profile?.role === "resident") {
+        if (!profile) {
+          router.replace("/signin");
+          return;
+        }
+
+        if (profile.approval_status === "pending") {
+          router.replace("/pending-approval");
+          return;
+        }
+
+        if (profile.approval_status === "rejected") {
+          await supabase.auth.signOut();
+          router.replace("/signin");
+          return;
+        }
+
+        if (profile.role === "resident") {
           router.replace("/resident-dashboard");
-        } else if (profile?.role === "admin") {
+        } else if (profile.role === "admin") {
           router.replace("/admin-dashboard");
-        } else if (profile?.role === "maintenance") {
+        } else if (profile.role === "maintenance") {
           router.replace("/maintenance-dashboard");
-        } else if (profile?.role === "security") {
+        } else if (profile.role === "security") {
           router.replace("/security-dashboard" as any);
         }
       }
