@@ -9,6 +9,7 @@ import {
     Text,
     View,
 } from "react-native";
+import { supabase } from "../lib/supabase";
 
 const colors = {
   background: "#FFF9F7",
@@ -22,6 +23,11 @@ const colors = {
 
 export default function PendingApproval() {
   const router = useRouter();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.replace("/signin");
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -171,7 +177,7 @@ export default function PendingApproval() {
 
         <Pressable
           style={styles.secondaryButton}
-          onPress={() => router.replace("/signin")}
+          onPress={handleSignOut}
         >
           <Text style={styles.backArrow}>←</Text>
           <Text style={styles.secondaryText}>Back to Sign In</Text>

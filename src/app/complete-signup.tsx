@@ -72,7 +72,7 @@ export default function CompleteSignup() {
         return;
       }
 
-      // 4. Go to correct dashboard
+      // 4. Approval pending
       router.replace("/pending-approval");
     } catch (error) {
       setError("Something went wrong while creating your account.");
