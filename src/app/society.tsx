@@ -1,4 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import {
     Alert,
@@ -58,19 +60,39 @@ export default function Society() {
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹ Back</Text>
-      </TouchableOpacity>
+      <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <Text style={styles.title}>Choose Your Society</Text>
+        <View style={styles.logoTile}>
+          <SymbolView
+            name={{
+              ios: "door.left.hand.open",
+              android: "door_open",
+              web: "door_open",
+            }}
+            tintColor={colors.brown}
+            size={32}
+          />
+        </View>
+        <Text style={styles.eyebrow}>GATED LIVING</Text>
+        <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>
-          Select the society you are a part of
+          Select your residence, gate pass, and{"\n"}society services.
         </Text>
       </View>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Society</Text>
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <SymbolView
+            name={{ ios: "building.2", android: "business", web: "business" }}
+            tintColor={colors.brown}
+            size={22}
+          />
+          <Text style={styles.sectionTitle}>Residential Society</Text>
+          <Text style={styles.residentialId}>Residential ID</Text>
+        </View>
+
+        <Text style={styles.label}>Community Registry</Text>
 
         {societies.map((society) => (
           <TouchableOpacity
@@ -81,6 +103,13 @@ export default function Society() {
             ]}
             onPress={() => setSelectedSociety(society)}
           >
+            <SymbolView
+              name={{ ios: "building.2", android: "business", web: "business" }}
+              tintColor={
+                selectedSociety === society ? colors.brown : colors.muted
+              }
+              size={20}
+            />
             <Text
               style={[
                 styles.societyText,
@@ -91,7 +120,7 @@ export default function Society() {
             </Text>
 
             {selectedSociety === society && (
-              <Text style={styles.checkmark}>✓</Text>
+              <Text style={styles.checkmark}>●</Text>
             )}
           </TouchableOpacity>
         ))}
@@ -103,6 +132,15 @@ export default function Society() {
           ]}
           onPress={() => setSelectedSociety("not-listed")}
         >
+          <SymbolView
+            name={{
+              ios: "questionmark.circle",
+              android: "help_outline",
+              web: "help_outline",
+            }}
+            tintColor={colors.muted}
+            size={20}
+          />
           <Text
             style={[
               styles.societyText,
@@ -113,7 +151,7 @@ export default function Society() {
           </Text>
 
           {selectedSociety === "not-listed" && (
-            <Text style={styles.checkmark}>✓</Text>
+            <Text style={styles.checkmark}>●</Text>
           )}
         </TouchableOpacity>
 
@@ -122,112 +160,174 @@ export default function Society() {
           onPress={handleContinue}
         >
           <Text style={styles.continueText}>Continue</Text>
+          <Text style={styles.arrow}>→</Text>
         </TouchableOpacity>
       </View>
+      <Text style={styles.helperText}>
+        Encrypted Residential Network • Gate Node 04
+      </Text>
     </ScrollView>
   );
 }
 
+const colors = {
+  background: "#FFF9F7",
+  brown: "#91441F",
+  ink: "#24100A",
+  muted: "#806D66",
+  peach: "#FFF0EB",
+  selected: "#FFE4DB",
+  white: "#FFFFFF",
+};
+
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-
-  backButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 8,
-    paddingRight: 15,
-    marginBottom: 30,
-  },
-
-  backText: {
-    color: "#6B3E2E",
-    fontSize: 18,
-    fontWeight: "600",
+    backgroundColor: colors.background,
+    paddingHorizontal: 29,
+    paddingTop: 43,
+    paddingBottom: 38,
   },
 
   header: {
     alignItems: "center",
-    marginBottom: 35,
+    marginBottom: 40,
+  },
+
+  logoTile: {
+    alignItems: "center",
+    backgroundColor: "#FFE9E2",
+    borderRadius: 18,
+    height: 102,
+    justifyContent: "center",
+    marginBottom: 29,
+    width: 102,
+  },
+
+  eyebrow: {
+    color: colors.brown,
+    fontFamily: "Georgia",
+    fontSize: 20,
+    letterSpacing: 1.6,
+    marginBottom: 19,
   },
 
   title: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#6B3E2E",
+    color: colors.ink,
+    fontFamily: "Georgia",
+    fontSize: 48,
+    fontWeight: "700",
     textAlign: "center",
   },
 
   subtitle: {
-    fontSize: 15,
-    letterSpacing: 0.5,
-    color: "#A65D3B",
-    marginTop: 8,
+    color: "#4E3D38",
+    fontSize: 23,
+    lineHeight: 36,
+    marginTop: 21,
     textAlign: "center",
   },
 
-  form: {
-    width: "100%",
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 23,
+    paddingHorizontal: 36,
+    paddingVertical: 31,
+    shadowColor: "#6F3D2A",
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+
+  cardHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: 13,
+  },
+
+  sectionTitle: {
+    color: colors.ink,
+    fontFamily: "Georgia",
+    fontSize: 22,
+    fontWeight: "700",
+    marginLeft: 12,
+  },
+
+  residentialId: {
+    color: colors.brown,
+    fontSize: 16,
+    marginLeft: "auto",
   },
 
   label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#6B3E2E",
-    marginBottom: 12,
+    color: colors.ink,
+    fontSize: 16,
+    marginBottom: 10,
+    marginTop: 11,
   },
 
   societyOption: {
-    minHeight: 56,
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 12,
-    backgroundColor: "#FFF8ED",
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: colors.peach,
+    borderRadius: 11,
+    flexDirection: "row",
+    minHeight: 57,
+    marginBottom: 11,
+    paddingHorizontal: 15,
     justifyContent: "space-between",
   },
 
   selectedOption: {
-    borderColor: "#A65D3B",
-    backgroundColor: "#F8E4D3",
+    backgroundColor: colors.selected,
   },
 
   societyText: {
-    color: "#4E3025",
-    fontSize: 16,
-    fontWeight: "500",
+    color: colors.ink,
+    flex: 1,
+    fontSize: 17,
+    marginLeft: 10,
   },
 
   selectedText: {
-    color: "#6B3E2E",
-    fontWeight: "700",
+    color: colors.brown,
+    fontWeight: "600",
   },
 
   checkmark: {
-    color: "#A65D3B",
-    fontSize: 20,
-    fontWeight: "700",
+    color: colors.brown,
+    fontSize: 15,
+    fontWeight: "600",
   },
 
   continueButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    backgroundColor: colors.brown,
+    borderRadius: 13,
+    flexDirection: "row",
+    height: 72,
+    justifyContent: "center",
+    marginTop: 28,
   },
 
   continueText: {
-    color: "#FFF8ED",
-    fontSize: 17,
+    color: colors.white,
+    fontSize: 22,
     fontWeight: "600",
+  },
+
+  arrow: {
+    color: colors.white,
+    fontSize: 31,
+    marginLeft: 11,
+  },
+
+  helperText: {
+    color: colors.muted,
+    fontFamily: "Georgia",
+    fontSize: 14,
+    lineHeight: 17,
+    marginTop: 13,
+    textAlign: "center",
   },
 });

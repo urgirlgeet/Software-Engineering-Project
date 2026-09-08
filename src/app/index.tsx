@@ -1,13 +1,13 @@
-import { SymbolView } from "expo-symbols";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { SymbolView } from "expo-symbols";
 import {
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 
 const colors = {
@@ -31,7 +31,16 @@ function FeatureCard({ icon, title, detail }: FeatureCardProps) {
     <View style={styles.featureCard}>
       <View style={styles.featureIcon}>
         <SymbolView
-          name={{ ios: icon === "person_key" ? "person.badge.key" : icon === "home" ? "house" : "checkmark.shield", android: icon, web: icon }}
+          name={{
+            ios:
+              icon === "person_key"
+                ? "person.badge.key"
+                : icon === "home"
+                  ? "house"
+                  : "checkmark.shield",
+            android: icon,
+            web: icon,
+          }}
           tintColor={colors.brown}
           size={28}
         />
@@ -56,7 +65,11 @@ export default function Index() {
           <View style={styles.logoHalo}>
             <View style={styles.logoTile}>
               <SymbolView
-                name={{ ios: "door.left.hand.open", android: "door_open", web: "door_open" }}
+                name={{
+                  ios: "door.left.hand.open",
+                  android: "door_open",
+                  web: "door_open",
+                }}
                 tintColor="#FBE5D6"
                 size={72}
               />
@@ -65,27 +78,46 @@ export default function Index() {
           <Text style={styles.eyebrow}>RESIDENTIAL SANCTUARY</Text>
           <Text style={styles.title}>GATED</Text>
           <Text style={styles.subtitle}>
-            Refined community living and estate{"\n"}management for modern residential societies.
+            Refined community living and estate{"\n"}management for modern
+            residential societies.
           </Text>
         </View>
 
         <View style={styles.features}>
-          <FeatureCard icon="verified_user" title="Concierge" detail="Intake & Gate" />
-          <FeatureCard icon="person_key" title="Passcodes" detail="Private Access" />
-          <FeatureCard icon="home" title="Estates" detail={"Verified\nEnclave"} />
+          <FeatureCard
+            icon="verified_user"
+            title="Concierge"
+            detail="Intake & Gate"
+          />
+          <FeatureCard
+            icon="person_key"
+            title="Passcodes"
+            detail="Private Access"
+          />
+          <FeatureCard
+            icon="home"
+            title="Estates"
+            detail={"Verified\nEnclave"}
+          />
         </View>
 
         <View style={styles.networkCard}>
           <View style={styles.networkIcon}>
             <SymbolView
-              name={{ ios: "person.crop.circle.badge.checkmark", android: "shield_person", web: "shield_person" }}
+              name={{
+                ios: "person.crop.circle.badge.checkmark",
+                android: "shield_person",
+                web: "shield_person",
+              }}
               tintColor={colors.brown}
               size={30}
             />
           </View>
           <View style={styles.networkCopy}>
             <Text style={styles.networkTitle}>Society Network</Text>
-            <Text style={styles.networkDetail}>Continuous estate surveillance</Text>
+            <Text style={styles.networkDetail}>
+              Continuous estate surveillance
+            </Text>
           </View>
           <View style={styles.activePill}>
             <Text style={styles.activeText}>ACTIVE</Text>
@@ -96,7 +128,10 @@ export default function Index() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Sign in"
-            style={({ pressed }) => [styles.signInButton, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.signInButton,
+              pressed && styles.pressed,
+            ]}
             onPress={() => router.push("/signin")}
           >
             <Text style={styles.signInText}>Sign In</Text>
@@ -106,7 +141,10 @@ export default function Index() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Request society access"
-            style={({ pressed }) => [styles.signUpButton, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.signUpButton,
+              pressed && styles.pressed,
+            ]}
             onPress={() => router.push("/signup")}
           >
             <Text style={styles.signUpText}>Request Society Access</Text>
@@ -116,14 +154,21 @@ export default function Index() {
         <View style={styles.footer}>
           <View style={styles.trustLine}>
             <SymbolView
-              name={{ ios: "checkmark.square", android: "check_box", web: "check_box" }}
+              name={{
+                ios: "checkmark.square",
+                android: "check_box",
+                web: "check_box",
+              }}
               tintColor={colors.brown}
               size={21}
             />
-            <Text style={styles.trustText}>Securing over 450+ residential communities</Text>
+            <Text style={styles.trustText}>
+              Securing over 450+ residential communities
+            </Text>
           </View>
           <Text style={styles.terms}>
-            By continuing, you acknowledge our Private Community Charter{"\n"}& Terms.
+            By continuing, you acknowledge our Private Community Charter{"\n"}&
+            Terms.
           </Text>
         </View>
       </ScrollView>
@@ -371,15 +416,5 @@ const styles = StyleSheet.create({
     lineHeight: 25,
     marginTop: 25,
     textAlign: "center",
-  },
-});
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  signInText: {
-    color: "#6B3E2E",
-    fontSize: 17,
-    fontWeight: "600",
   },
 });

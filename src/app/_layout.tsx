@@ -34,13 +34,7 @@ export default function RootLayout() {
 
     checkSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!session) {
-          router.replace("/signin");
-        }
-      },
-    );
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {});
 
     return () => {
       listener.subscription.unsubscribe();
