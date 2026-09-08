@@ -38,8 +38,11 @@ function FeatureCard({ icon, title, detail }: FeatureCardProps) {
                 : icon === "home"
                   ? "house"
                   : "checkmark.shield",
+<<<<<<< HEAD
             android: icon,
             web: icon,
+=======
+>>>>>>> bb7dfc5 (Complaints)
           }}
           tintColor={colors.brown}
           size={28}
@@ -417,4 +420,18 @@ const styles = StyleSheet.create({
     marginTop: 25,
     textAlign: "center",
   },
+<<<<<<< HEAD
+=======
+
+  signIn: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  signInTextSmall: {
+    color: "#6B3E2E",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+>>>>>>> bb7dfc5 (Complaints)
 });
