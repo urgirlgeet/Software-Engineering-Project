@@ -1,163 +1,215 @@
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Alert,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
+
 import { supabase } from "../lib/supabase";
+import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
+
+type Profile = {
+  name: string | null;
+  society_id: string | null;
+};
 
 export default function SecurityDashboard() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+
+  const [profile, setProfile] = useState<Profile>({
+    name: null,
+    society_id: null,
+  });
+  const [societyName, setSocietyName] = useState("Your Society");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAccess();
+    loadDashboard();
   }, []);
 
-  const checkAccess = async () => {
-    const { data } = await supabase.auth.getUser();
+  const loadDashboard = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!data.user) {
-      router.replace("/signin");
-      return;
+      if (!user) {
+        router.replace("/signin");
+        return;
+      }
+
+      const { data: userProfile, error } = await supabase
+        .from("users")
+        .select("name, society_id, role")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (error || !userProfile) {
+        Alert.alert("Error", "Unable to load your profile.");
+        router.replace("/signin");
+        return;
+      }
+
+      if (userProfile.role !== "security") {
+        router.replace("/signin");
+        return;
+      }
+
+      setProfile({
+        name: userProfile.name,
+        society_id: userProfile.society_id,
+      });
+
+      if (userProfile.society_id) {
+        const { data: society } = await supabase
+          .from("societies")
+          .select("name")
+          .eq("id", userProfile.society_id)
+          .single();
+
+        if (society?.name) {
+          setSocietyName(society.name);
+        }
+      }
+    } catch {
+      Alert.alert("Error", "Something went wrong while loading the dashboard.");
+    } finally {
+      setLoading(false);
     }
-
-    const { data: profile, error } = await supabase
-      .from("users")
-      .select("role")
-      .eq("auth_user_id", data.user.id)
-      .single();
-
-    if (error || !profile || profile.role !== "security") {
-      Alert.alert("Access Denied", "You do not have access to this dashboard.");
-      router.replace("/signin");
-      return;
-    }
-
-    setChecking(false);
   };
 
-  const handleSignOut = async () => {
+  const logout = async () => {
     await supabase.auth.signOut();
-    router.replace("/signin");
+    router.replace("/");
   };
 
-  if (checking) {
+  if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={dashboardStyles.loadingContainer}>
+        <Text style={dashboardStyles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>GATED</Text>
-        <Text style={styles.subtitle}>Security Dashboard</Text>
-      </View>
+    <SafeAreaView style={dashboardStyles.safeArea}>
+      <StatusBar style="dark" />
 
-      <View style={styles.content}>
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Visitor Requests</Text>
-          <Text style={styles.cardText}>
-            View and manage visitor entry requests.
-          </Text>
-        </TouchableOpacity>
+      <ScrollView
+        contentContainerStyle={dashboardStyles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={dashboardStyles.topBar}>
+          <View>
+            <Text style={dashboardStyles.pageTitle}>GATED</Text>
+            <Text style={dashboardStyles.pageSubtitle}>SECURITY PORTAL</Text>
+          </View>
 
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Deliveries</Text>
-          <Text style={styles.cardText}>Manage incoming delivery entries.</Text>
-        </TouchableOpacity>
+          <Pressable onPress={() => router.replace("/")}>
+            <View style={dashboardStyles.homeMark}>
+              <Text style={{ color: dashboardColors.white }}>⌂</Text>
+            </View>
+          </Pressable>
+        </View>
 
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Gate Activity</Text>
-          <Text style={styles.cardText}>
-            View recent entry and exit activity.
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <View style={dashboardStyles.profileBanner}>
+          <View style={dashboardStyles.profileCopy}>
+            <Text style={dashboardStyles.bannerEyebrow}>SECURITY DESK</Text>
 
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
-    </View>
+            <Text style={dashboardStyles.greeting}>
+              Hello, {profile.name || "Security Staff"}
+            </Text>
+
+            <View style={dashboardStyles.addressLine}>
+              <Text style={{ color: dashboardColors.brown }}>•</Text>
+              <Text style={dashboardStyles.address}>{societyName}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>Security Desk</Text>
+          </View>
+        </View>
+
+        <View style={dashboardStyles.actionGrid}>
+          <Pressable
+            style={dashboardStyles.actionCard}
+            onPress={() => router.push("/visitors" as any)}
+          >
+            <Text style={dashboardStyles.actionTitle}>Visitors</Text>
+            <Text style={dashboardStyles.actionDetail}>
+              Manage visitor entries
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={dashboardStyles.actionCard}
+            onPress={() => router.push("/deliveries" as any)}
+          >
+            <Text style={dashboardStyles.actionTitle}>Deliveries</Text>
+            <Text style={dashboardStyles.actionDetail}>
+              Track incoming deliveries
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={dashboardStyles.actionCard}
+            onPress={() => router.push("/gate-activity" as any)}
+          >
+            <Text style={dashboardStyles.actionTitle}>Gate Activity</Text>
+            <Text style={dashboardStyles.actionDetail}>View gate activity</Text>
+          </Pressable>
+
+          <Pressable
+            style={dashboardStyles.actionCard}
+            onPress={() => router.push("/residents" as any)}
+          >
+            <Text style={dashboardStyles.actionTitle}>Residents</Text>
+            <Text style={dashboardStyles.actionDetail}>
+              View resident information
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={dashboardStyles.actionCard}
+            onPress={() => router.push("/emergency" as any)}
+          >
+            <Text style={dashboardStyles.actionTitle}>Emergency</Text>
+            <Text style={dashboardStyles.actionDetail}>
+              Emergency information
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={dashboardStyles.actionCard}
+            onPress={() => router.push("/notices" as any)}
+          >
+            <Text style={dashboardStyles.actionTitle}>Announcements</Text>
+            <Text style={dashboardStyles.actionDetail}>
+              Society announcements
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>Account</Text>
+          </View>
+        </View>
+
+        <Pressable style={dashboardStyles.requestShortcut} onPress={logout}>
+          <Text style={dashboardStyles.requestShortcutText}>Sign Out</Text>
+
+          <Text style={dashboardStyles.requestShortcutArrow}>→</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  loadingText: {
-    color: "#6B3E2E",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-
-  title: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: "#6B3E2E",
-  },
-
-  subtitle: {
-    fontSize: 18,
-    color: "#A65D3B",
-    marginTop: 6,
-    fontWeight: "600",
-  },
-
-  content: {
-    flex: 1,
-    gap: 16,
-  },
-
-  card: {
-    backgroundColor: "#FFF8ED",
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 14,
-    padding: 20,
-  },
-
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#6B3E2E",
-    marginBottom: 6,
-  },
-
-  cardText: {
-    fontSize: 14,
-    color: "#7A5545",
-  },
-
-  signOutButton: {
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-
-  signOutText: {
-    color: "#FFF8ED",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

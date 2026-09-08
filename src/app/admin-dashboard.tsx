@@ -1,172 +1,371 @@
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { SymbolView } from "expo-symbols";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Alert,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
+
 import { supabase } from "../lib/supabase";
+import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
+
+import ComplaintCard, {
+    AdminComplaint,
+} from "../components/admin/ComplaintCard";
+
+import AssignComplaintModal from "../components/admin/AssignComplaint";
+
+type AdminProfile = {
+  name: string;
+  society_id: string;
+};
+
+type AdminActionProps = {
+  icon: string;
+  title: string;
+  detail: string;
+  onPress: () => void;
+};
+
+function AdminAction({ icon, title, detail, onPress }: AdminActionProps) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        dashboardStyles.actionCard,
+        pressed && { opacity: 0.8 },
+      ]}
+      onPress={onPress}
+    >
+      <View style={dashboardStyles.actionIcon}>
+        <SymbolView
+          name={icon as any}
+          tintColor={dashboardColors.brown}
+          size={23}
+        />
+      </View>
+
+      <Text style={dashboardStyles.actionTitle}>{title}</Text>
+
+      <Text style={dashboardStyles.actionDetail}>{detail}</Text>
+    </Pressable>
+  );
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
+
   const [checking, setChecking] = useState(true);
+  const [profile, setProfile] = useState<AdminProfile | null>(null);
+  const [societyName, setSocietyName] = useState("");
+  const [complaints, setComplaints] = useState<AdminComplaint[]>([]);
+
+  const [selectedComplaint, setSelectedComplaint] = useState<string | null>(
+    null,
+  );
+
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   useEffect(() => {
-    checkAccess();
+    loadDashboard();
   }, []);
 
-  const checkAccess = async () => {
-    const { data } = await supabase.auth.getUser();
+  const loadDashboard = async () => {
+    try {
+      const { data: authData } = await supabase.auth.getUser();
 
-    if (!data.user) {
-      router.replace("/signin");
+      if (!authData.user) {
+        router.replace("/signin");
+        return;
+      }
+
+      const { data: admin, error } = await supabase
+        .from("users")
+        .select("name, society_id, role")
+        .eq("auth_user_id", authData.user.id)
+        .single();
+
+      if (error || !admin || admin.role !== "admin") {
+        Alert.alert(
+          "Access Denied",
+          "You do not have access to this dashboard.",
+        );
+
+        router.replace("/signin");
+        return;
+      }
+
+      setProfile({
+        name: admin.name,
+        society_id: admin.society_id,
+      });
+
+      const { data: society } = await supabase
+        .from("societies")
+        .select("name")
+        .eq("id", admin.society_id)
+        .single();
+
+      if (society) {
+        setSocietyName(society.name);
+      }
+
+      await loadComplaints(admin.society_id);
+    } catch {
+      Alert.alert("Error", "Unable to load your dashboard.");
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const loadComplaints = async (societyId: string) => {
+    const { data, error } = await supabase
+      .from("complaints")
+      .select("id, title, category, priority, status, created_at, assigned_to")
+      .eq("society_id", societyId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      console.log("Complaint fetch error:", error);
       return;
     }
 
-    const { data: profile, error } = await supabase
-      .from("users")
-      .select("role")
-      .eq("auth_user_id", data.user.id)
-      .single();
+    setComplaints(data || []);
+  };
 
-    if (error || !profile || profile.role !== "admin") {
-      Alert.alert("Access Denied", "You do not have access to this dashboard.");
-      router.replace("/signin");
-      return;
+  const openAssignModal = (complaintId: string) => {
+    setSelectedComplaint(complaintId);
+    setShowAssignModal(true);
+  };
+
+  const closeAssignModal = () => {
+    setShowAssignModal(false);
+    setSelectedComplaint(null);
+  };
+
+  const handleAssigned = async () => {
+    if (profile) {
+      await loadComplaints(profile.society_id);
     }
-
-    setChecking(false);
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.replace("/signin");
+    router.replace("/");
   };
 
   if (checking) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={dashboardStyles.loadingContainer}>
+        <Text style={dashboardStyles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
 
+  if (!profile) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Society Admin Dashboard</Text>
-        <Text style={styles.subtitle}>Manage your society</Text>
-      </View>
+    <SafeAreaView style={dashboardStyles.safeArea}>
+      <StatusBar style="dark" />
 
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => router.push("/admin-approvals")}
+      <ScrollView
+        contentContainerStyle={dashboardStyles.container}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.cardTitle}>Approvals</Text>
-        <Text style={styles.cardText}>
-          Review pending and active user approvals
-        </Text>
-      </TouchableOpacity>
+        <View style={dashboardStyles.topBar}>
+          <View>
+            <Text style={dashboardStyles.pageTitle}>GATED</Text>
 
-      <View style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Residents</Text>
-          <Text style={styles.cardText}>Manage society residents</Text>
+            <Text style={dashboardStyles.pageSubtitle}>
+              SOCIETY ADMINISTRATION
+            </Text>
+          </View>
+
+          <Pressable
+            style={dashboardStyles.homeMark}
+            onPress={() => router.push("/admin-dashboard")}
+          >
+            <SymbolView
+              name={{
+                ios: "house.fill",
+                android: "home",
+                web: "home",
+              }}
+              tintColor="#FBE5D6"
+              size={18}
+            />
+          </Pressable>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Complaints</Text>
-          <Text style={styles.cardText}>View and manage complaints</Text>
+        <View style={dashboardStyles.profileBanner}>
+          <View style={dashboardStyles.profileCopy}>
+            <Text style={dashboardStyles.bannerEyebrow}>SOCIETY ADMIN</Text>
+
+            <Text style={dashboardStyles.greeting}>
+              Welcome, {profile.name}
+            </Text>
+
+            <View style={dashboardStyles.addressLine}>
+              <SymbolView
+                name={{
+                  ios: "building.2",
+                  android: "business",
+                  web: "business",
+                }}
+                tintColor={dashboardColors.brown}
+                size={15}
+              />
+
+              <Text style={dashboardStyles.address}>
+                {societyName || "Society"}
+              </Text>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Announcements</Text>
-          <Text style={styles.cardText}>Create and manage announcements</Text>
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>Administration</Text>
+          </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Society Management</Text>
-          <Text style={styles.cardText}>Manage society information</Text>
-        </View>
-      </View>
+        <View style={dashboardStyles.actionGrid}>
+          <AdminAction
+            icon="person.badge.plus"
+            title="Approvals"
+            detail="Review resident access"
+            onPress={() => router.push("/admin-approvals")}
+          />
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
-        <Text style={styles.logoutText}>Sign Out</Text>
-      </TouchableOpacity>
-    </View>
+          <AdminAction
+            icon="person.3"
+            title="Residents"
+            detail="Manage society residents"
+            onPress={() => router.push("/residents" as any)}
+          />
+
+          <AdminAction
+            icon="exclamationmark.bubble"
+            title="Complaints"
+            detail="Manage resident complaints"
+            onPress={() => {}}
+          />
+
+          <AdminAction
+            icon="wrench.and.screwdriver"
+            title="Maintenance"
+            detail="Monitor maintenance work"
+            onPress={() => router.push("/maintenance-dashboard")}
+          />
+
+          <AdminAction
+            icon="megaphone"
+            title="Announcements"
+            detail="Manage society notices"
+            onPress={() => router.push("/notices" as any)}
+          />
+
+          <AdminAction
+            icon="shield.lefthalf.filled"
+            title="Security"
+            detail="Monitor gate activity"
+            onPress={() => router.push("/security-dashboard")}
+          />
+        </View>
+
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>
+              Resident Complaints
+            </Text>
+
+            <Text style={dashboardStyles.count}>{complaints.length}</Text>
+          </View>
+        </View>
+
+        {complaints.length === 0 ? (
+          <View style={dashboardStyles.requestCard}>
+            <Text style={dashboardStyles.statusText}>
+              No complaints submitted.
+            </Text>
+          </View>
+        ) : (
+          complaints.map((complaint) => (
+            <ComplaintCard
+              key={complaint.id}
+              complaint={complaint}
+              onAssign={() => openAssignModal(complaint.id)}
+            />
+          ))
+        )}
+
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>Society Management</Text>
+          </View>
+        </View>
+
+        <Pressable
+          style={dashboardStyles.requestCard}
+          onPress={() => router.push("/society" as any)}
+        >
+          <View style={dashboardStyles.requestHeader}>
+            <SymbolView
+              name={{
+                ios: "building.2.fill",
+                android: "business",
+                web: "business",
+              }}
+              tintColor={dashboardColors.brown}
+              size={21}
+            />
+
+            <Text style={[dashboardStyles.requestTitle, { marginLeft: 10 }]}>
+              Society Information
+            </Text>
+          </View>
+
+          <Text style={dashboardStyles.requestDate}>
+            View and manage society information
+          </Text>
+        </Pressable>
+
+        <Pressable style={dashboardStyles.requestCard} onPress={handleSignOut}>
+          <View style={dashboardStyles.requestHeader}>
+            <SymbolView
+              name={{
+                ios: "rectangle.portrait.and.arrow.right",
+                android: "logout",
+                web: "logout",
+              }}
+              tintColor={dashboardColors.brown}
+              size={21}
+            />
+
+            <Text style={[dashboardStyles.requestTitle, { marginLeft: 10 }]}>
+              Sign Out
+            </Text>
+          </View>
+        </Pressable>
+
+        <View style={{ height: 70 }} />
+      </ScrollView>
+
+      <AssignComplaintModal
+        visible={showAssignModal}
+        complaintId={selectedComplaint}
+        societyId={profile.society_id}
+        onClose={closeAssignModal}
+        onAssigned={handleAssigned}
+      />
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  loadingText: {
-    color: "#6B3E2E",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
-    paddingTop: 60,
-  },
-
-  header: {
-    marginBottom: 30,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#6B3E2E",
-  },
-
-  subtitle: {
-    fontSize: 16,
-    color: "#A65D3B",
-    marginTop: 7,
-  },
-
-  content: {
-    gap: 15,
-  },
-
-  card: {
-    backgroundColor: "#FFF8ED",
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 14,
-    padding: 20,
-  },
-
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#6B3E2E",
-  },
-
-  cardText: {
-    fontSize: 14,
-    color: "#A65D3B",
-    marginTop: 6,
-  },
-
-  logoutButton: {
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: "auto",
-    marginBottom: 30,
-  },
-
-  logoutText: {
-    color: "#FFF8ED",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
