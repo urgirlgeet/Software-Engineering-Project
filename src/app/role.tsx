@@ -5,7 +5,7 @@ import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 const roles = [
   {
     id: "resident",
-    title: "User",
+    title: "Resident",
     description: "Resident of the society",
   },
   {
@@ -14,15 +14,27 @@ const roles = [
     description: "Manage and administer the society",
   },
   {
+    id: "security",
+    title: "Security",
+    description: "Security staff of the society",
+  },
+  {
     id: "maintenance",
-    title: "Maintenance / Security",
-    description: "Maintenance or security staff",
+    title: "Maintenance",
+    description: "Maintenance staff of the society",
   },
 ];
 
 export default function Role() {
   const router = useRouter();
-  const { society } = useLocalSearchParams();
+
+  const { name, phone, email, password, society } = useLocalSearchParams<{
+    name: string;
+    phone: string;
+    email: string;
+    password: string;
+    society: string;
+  }>();
 
   const [selectedRole, setSelectedRole] = useState("");
 
@@ -35,7 +47,11 @@ export default function Role() {
     router.push({
       pathname: "/details",
       params: {
-        society: society as string,
+        name,
+        phone,
+        email,
+        password,
+        society,
         role: selectedRole,
       },
     });

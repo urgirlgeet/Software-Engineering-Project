@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { supabase } from "../lib/supabase";
 
-export default function ResidentDashboard() {
+export default function SecurityDashboard() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
@@ -25,7 +25,7 @@ export default function ResidentDashboard() {
       .eq("auth_user_id", data.user.id)
       .single();
 
-    if (error || !profile || profile.role !== "resident") {
+    if (error || !profile || profile.role !== "security") {
       Alert.alert("Access Denied", "You do not have access to this dashboard.");
       router.replace("/signin");
       return;
@@ -50,29 +50,33 @@ export default function ResidentDashboard() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Resident Dashboard</Text>
-        <Text style={styles.subtitle}>Welcome to GATED</Text>
+        <Text style={styles.title}>GATED</Text>
+        <Text style={styles.subtitle}>Security Dashboard</Text>
       </View>
 
       <View style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Apartment</Text>
-          <Text style={styles.cardText}>Your apartment details</Text>
-        </View>
+        <TouchableOpacity style={styles.card}>
+          <Text style={styles.cardTitle}>Visitor Requests</Text>
+          <Text style={styles.cardText}>
+            View and manage visitor entry requests.
+          </Text>
+        </TouchableOpacity>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Complaints</Text>
-          <Text style={styles.cardText}>Raise and track complaints</Text>
-        </View>
+        <TouchableOpacity style={styles.card}>
+          <Text style={styles.cardTitle}>Deliveries</Text>
+          <Text style={styles.cardText}>Manage incoming delivery entries.</Text>
+        </TouchableOpacity>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Announcements</Text>
-          <Text style={styles.cardText}>View society announcements</Text>
-        </View>
+        <TouchableOpacity style={styles.card}>
+          <Text style={styles.cardTitle}>Gate Activity</Text>
+          <Text style={styles.cardText}>
+            View recent entry and exit activity.
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
-        <Text style={styles.logoutText}>Sign Out</Text>
+      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
     </View>
   );
@@ -95,28 +99,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
     paddingTop: 60,
   },
 
   header: {
-    marginBottom: 30,
+    alignItems: "center",
+    marginBottom: 40,
   },
 
   title: {
-    fontSize: 30,
+    fontSize: 36,
     fontWeight: "800",
     color: "#6B3E2E",
   },
 
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#A65D3B",
-    marginTop: 7,
+    marginTop: 6,
+    fontWeight: "600",
   },
 
   content: {
-    gap: 15,
+    flex: 1,
+    gap: 16,
   },
 
   card: {
@@ -131,25 +138,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#6B3E2E",
+    marginBottom: 6,
   },
 
   cardText: {
     fontSize: 14,
-    color: "#A65D3B",
-    marginTop: 6,
+    color: "#7A5545",
   },
 
-  logoutButton: {
+  signOutButton: {
     height: 52,
-    borderRadius: 14,
+    borderRadius: 12,
     backgroundColor: "#A65D3B",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: "auto",
     marginBottom: 30,
   },
 
-  logoutText: {
+  signOutText: {
     color: "#FFF8ED",
     fontSize: 16,
     fontWeight: "600",

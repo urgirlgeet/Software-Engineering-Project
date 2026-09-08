@@ -11,99 +11,79 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { supabase } from "../lib/supabase";
 
 export default function Details() {
   const router = useRouter();
 
-  const { society, role } = useLocalSearchParams();
+  const { name, phone, email, password, society, role } = useLocalSearchParams<{
+    name: string;
+    phone: string;
+    email: string;
+    password: string;
+    society: string;
+    role: string;
+  }>();
 
   const [apartment, setApartment] = useState("");
-  const [designation, setDesignation] = useState("");
   const [employeeId, setEmployeeId] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const getRoleTitle = () => {
-    if (role === "admin") {
-      return "Admin Details";
+  const getTitle = () => {
+    switch (role) {
+      case "resident":
+        return "Resident Details";
+      case "admin":
+        return "Admin Details";
+      case "security":
+        return "Security Details";
+      case "maintenance":
+        return "Maintenance Details";
+      default:
+        return "Additional Details";
     }
-
-    if (role === "maintenance") {
-      return "Staff Details";
-    }
-
-    return "Resident Details";
   };
 
-  const getRoleSubtitle = () => {
-    if (role === "admin") {
-      return "Enter your society admin details";
+  const getSubtitle = () => {
+    switch (role) {
+      case "resident":
+        return "Enter your apartment details";
+      case "admin":
+        return "Enter your admin identification";
+      case "security":
+        return "Enter your employee identification";
+      case "maintenance":
+        return "Enter your employee identification";
+      default:
+        return "Complete your profile";
     }
-
-    if (role === "maintenance") {
-      return "Enter your maintenance or security details";
-    }
-
-    return "Complete your profile to continue";
   };
 
-  const handleContinue = async () => {
-    if (role === "resident" && !apartment) {
+  const handleContinue = () => {
+    if (role === "resident" && !apartment.trim()) {
       Alert.alert("Error", "Please enter your apartment number.");
       return;
     }
 
-    if (role === "admin" && !designation) {
-      Alert.alert("Error", "Please enter your designation.");
-      return;
-    }
-
-    if (role === "maintenance" && !employeeId) {
+    if (
+      (role === "admin" || role === "security" || role === "maintenance") &&
+      !employeeId.trim()
+    ) {
       Alert.alert("Error", "Please enter your employee ID.");
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError || !user) {
-        Alert.alert("Error", "User session could not be found.");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("users")
-        .update({
-          apartment_number: role === "resident" ? apartment.trim() : null,
-          role: role,
-          society: society,
-          designation: role === "admin" ? designation.trim() : null,
-          employee_id: role === "maintenance" ? employeeId.trim() : null,
-        })
-        .eq("id", user.id);
-
-      if (error) {
-        Alert.alert("Error", error.message);
-        return;
-      }
-
-      if (role === "resident") {
-        router.replace("/resident-dashboard");
-      } else if (role === "admin") {
-        router.replace("/admin-dashboard");
-      } else if (role === "maintenance") {
-        router.replace("/maintenance-dashboard");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
+    router.push({
+      pathname: "/complete-signup",
+      params: {
+        name,
+        phone,
+        email,
+        password,
+        society,
+        role,
+        apartment: role === "resident" ? apartment.trim() : "",
+        employeeId: role !== "resident" ? employeeId.trim() : "",
+      },
+    });
   };
 
   return (
@@ -125,8 +105,9 @@ export default function Details() {
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.title}>{getRoleTitle()}</Text>
-          <Text style={styles.subtitle}>{getRoleSubtitle()}</Text>
+          <Text style={styles.title}>{getTitle()}</Text>
+
+          <Text style={styles.subtitle}>{getSubtitle()}</Text>
 
           <View style={styles.societyBadge}>
             <Text style={styles.societyText}>{society}</Text>
@@ -149,22 +130,9 @@ export default function Details() {
             </>
           )}
 
-          {role === "admin" && (
-            <>
-              <Text style={styles.label}>Designation</Text>
-
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Society President"
-                placeholderTextColor="#A98F82"
-                value={designation}
-                onChangeText={setDesignation}
-                autoCapitalize="words"
-              />
-            </>
-          )}
-
-          {role === "maintenance" && (
+          {(role === "admin" ||
+            role === "security" ||
+            role === "maintenance") && (
             <>
               <Text style={styles.label}>Employee ID</Text>
 
@@ -180,16 +148,10 @@ export default function Details() {
           )}
 
           <TouchableOpacity
-            style={[
-              styles.continueButton,
-              loading && styles.continueButtonDisabled,
-            ]}
+            style={styles.continueButton}
             onPress={handleContinue}
-            disabled={loading}
           >
-            <Text style={styles.continueText}>
-              {loading ? "Saving..." : "Continue to Dashboard"}
-            </Text>
+            <Text style={styles.continueText}>Create Account</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -288,10 +250,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 30,
-  },
-
-  continueButtonDisabled: {
-    opacity: 0.6,
   },
 
   continueText: {

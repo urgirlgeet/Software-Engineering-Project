@@ -1,13 +1,56 @@
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { supabase } from "../lib/supabase";
 
 export default function MaintenanceDashboard() {
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    checkAccess();
+  }, []);
+
+  const checkAccess = async () => {
+    const { data } = await supabase.auth.getUser();
+
+    if (!data.user) {
+      router.replace("/signin");
+      return;
+    }
+
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("role")
+      .eq("auth_user_id", data.user.id)
+      .single();
+
+    if (error || !profile || profile.role !== "maintenance") {
+      Alert.alert("Access Denied", "You do not have access to this dashboard.");
+      router.replace("/signin");
+      return;
+    }
+
+    setChecking(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.replace("/signin");
+  };
+
+  if (checking) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Maintenance / Security</Text>
+        <Text style={styles.title}>Maintenance Dashboard</Text>
         <Text style={styles.subtitle}>Society operations</Text>
       </View>
 
@@ -23,20 +66,12 @@ export default function MaintenanceDashboard() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Security</Text>
-          <Text style={styles.cardText}>Manage security-related activities</Text>
-        </View>
-
-        <View style={styles.card}>
           <Text style={styles.cardTitle}>Announcements</Text>
           <Text style={styles.cardText}>View society announcements</Text>
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={() => router.replace("/signin")}
-      >
+      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
         <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
     </View>
@@ -44,6 +79,19 @@ export default function MaintenanceDashboard() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#F3E8D3",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  loadingText: {
+    color: "#6B3E2E",
+    fontSize: 17,
+    fontWeight: "600",
+  },
+
   container: {
     flex: 1,
     backgroundColor: "#F3E8D3",

@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
     Alert,
@@ -21,6 +21,13 @@ const societies = [
 export default function Society() {
   const router = useRouter();
 
+  const { name, phone, email, password } = useLocalSearchParams<{
+    name: string;
+    phone: string;
+    email: string;
+    password: string;
+  }>();
+
   const [selectedSociety, setSelectedSociety] = useState("");
 
   const handleContinue = () => {
@@ -37,6 +44,10 @@ export default function Society() {
     router.push({
       pathname: "/role",
       params: {
+        name: name,
+        phone: phone,
+        email: email,
+        password: password,
         society: selectedSociety,
       },
     });

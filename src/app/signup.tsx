@@ -11,7 +11,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { supabase } from "../lib/supabase";
 
 export default function SignUp() {
   const router = useRouter();
@@ -23,7 +22,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignUp = async () => {
+  const handleNext = () => {
     if (!name || !phone || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields.");
       return;
@@ -39,61 +38,25 @@ export default function SignUp() {
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const { data, error } = await supabase.auth.signUp({
+    router.push({
+      pathname: "/society",
+      params: {
+        name: name.trim(),
+        phone: phone.trim(),
         email: email.trim(),
         password,
-      });
-
-      if (error) {
-        Alert.alert("Sign Up Failed", error.message);
-        return;
-      }
-
-      if (!data.user) {
-        Alert.alert("Error", "Account could not be created.");
-        return;
-      }
-
-      const { error: profileError } = await supabase.from("users").insert({
-        id: data.user.id,
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        role: null,
-      });
-
-      if (profileError) {
-        Alert.alert("Error", profileError.message);
-        return;
-      }
-
-      Alert.alert("Success", "Account created successfully!", [
-        {
-          text: "OK",
-          onPress: () => router.replace("/society"),
-        },
-      ]);
-    } catch (error) {
-      Alert.alert("Error", "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
+      },
+    });
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
     >
       <ScrollView
         contentContainerStyle={styles.container}
-        automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity
@@ -162,16 +125,11 @@ export default function SignUp() {
           />
 
           <TouchableOpacity
-            style={[
-              styles.signUpButton,
-              loading && styles.signUpButtonDisabled,
-            ]}
-            onPress={handleSignUp}
+            style={styles.button}
+            onPress={handleNext}
             disabled={loading}
           >
-            <Text style={styles.signUpText}>
-              {loading ? "Creating Account..." : "Create Account"}
-            </Text>
+            <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -256,7 +214,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  signUpButton: {
+  button: {
     height: 56,
     borderRadius: 14,
     backgroundColor: "#A65D3B",
@@ -265,11 +223,7 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
 
-  signUpButtonDisabled: {
-    opacity: 0.6,
-  },
-
-  signUpText: {
+  buttonText: {
     color: "#FFF8ED",
     fontSize: 17,
     fontWeight: "600",

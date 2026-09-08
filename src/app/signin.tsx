@@ -42,22 +42,33 @@ export default function SignIn() {
       const { data: profile, error: profileError } = await supabase
         .from("users")
         .select("role")
-        .eq("id", data.user.id)
+        .eq("auth_user_id", data.user.id)
         .single();
 
-      if (profileError) {
-        Alert.alert("Error", profileError.message);
+      if (profileError || !profile) {
+        Alert.alert("Error", "User profile not found.");
         return;
       }
 
-      if (profile.role === "resident") {
-        router.replace("/resident-dashboard");
-      } else if (profile.role === "admin") {
-        router.replace("/admin-dashboard");
-      } else if (profile.role === "maintenance") {
-        router.replace("/maintenance-dashboard");
-      } else {
-        router.replace("/society");
+      switch (profile.role) {
+        case "resident":
+          router.replace("/resident-dashboard");
+          break;
+
+        case "admin":
+          router.replace("/admin-dashboard");
+          break;
+
+        case "maintenance":
+          router.replace("/maintenance-dashboard");
+          break;
+
+        case "security":
+          router.replace("/security-dashboard" as any);
+          break;
+
+        default:
+          Alert.alert("Error", "Invalid user role.");
       }
     } catch (error) {
       Alert.alert("Error", "Something went wrong.");
