@@ -178,6 +178,12 @@ export default function ResidentDashboard() {
             icon="warning"
             title="Raise Complaint"
             detail="Escalate an incident"
+            onPress={() =>
+              router.push({
+                pathname: "/request",
+                params: { type: "complaint" },
+              })
+            }
           />
           <ActionCard
             icon="spa"
@@ -238,6 +244,29 @@ export default function ResidentDashboard() {
           count="1"
           action="Request New"
         />
+        <Pressable
+          style={styles.requestShortcut}
+          onPress={() =>
+            router.push({
+              pathname: "/request",
+              params: { type: "maintenance" },
+            })
+          }
+        >
+          <SymbolView
+            name={{
+              ios: "wrench.and.screwdriver",
+              android: "build",
+              web: "build",
+            }}
+            tintColor={colors.brown}
+            size={18}
+          />
+          <Text style={styles.requestShortcutText}>
+            Create a maintenance request
+          </Text>
+          <Text style={styles.requestShortcutArrow}>→</Text>
+        </Pressable>
         {maintenanceData.map((item) => (
           <RequestCard key={item.title} item={item} />
         ))}
@@ -313,13 +342,15 @@ function ActionCard({
   icon,
   title,
   detail,
+  onPress,
 }: {
   icon: string;
   title: string;
   detail: string;
+  onPress?: () => void;
 }) {
   return (
-    <Pressable style={styles.actionCard}>
+    <Pressable style={styles.actionCard} onPress={onPress}>
       <View style={styles.actionIcon}>
         <SymbolView
           name={{ ios: icon as any, android: icon, web: icon }}
@@ -557,6 +588,21 @@ const styles = StyleSheet.create({
     marginBottom: 11,
     padding: 14,
   },
+  requestShortcut: {
+    alignItems: "center",
+    backgroundColor: colors.peach,
+    borderRadius: 9,
+    flexDirection: "row",
+    marginBottom: 11,
+    padding: 12,
+  },
+  requestShortcutText: {
+    color: colors.brown,
+    flex: 1,
+    fontSize: 13,
+    marginLeft: 9,
+  },
+  requestShortcutArrow: { color: colors.brown, fontSize: 20 },
   requestHeader: { alignItems: "center", flexDirection: "row" },
   category: { color: colors.brown, fontSize: 10, letterSpacing: 1 },
   separator: { color: colors.muted, marginHorizontal: 6 },
