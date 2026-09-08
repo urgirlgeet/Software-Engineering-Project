@@ -4,14 +4,14 @@ import {
     Alert,
     KeyboardAvoidingView,
     Platform,
-    ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+
 import { supabase } from "../lib/supabase";
+import { colors, styles } from "../styles/theme";
 
 export default function SignIn() {
   const router = useRouter();
@@ -19,6 +19,25 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const getDashboard = (role: string) => {
+    switch (role) {
+      case "resident":
+        return "/resident-dashboard";
+
+      case "admin":
+        return "/admin-dashboard";
+
+      case "maintenance":
+        return "/maintenance-dashboard";
+
+      case "security":
+        return "/security-dashboard";
+
+      default:
+        return null;
+    }
+  };
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -39,9 +58,14 @@ export default function SignIn() {
         return;
       }
 
+      if (!data.user) {
+        Alert.alert("Error", "Unable to sign in.");
+        return;
+      }
+
       const { data: profile, error: profileError } = await supabase
         .from("users")
-        .select("role, approval_status")
+        .select("role")
         .eq("auth_user_id", data.user.id)
         .single();
 
@@ -50,42 +74,15 @@ export default function SignIn() {
         return;
       }
 
-      if (profile.approval_status === "pending") {
-        router.replace("/pending-approval");
+      const dashboard = getDashboard(profile.role);
+
+      if (!dashboard) {
+        Alert.alert("Error", "Invalid user role.");
         return;
       }
 
-      if (profile.approval_status === "rejected") {
-        await supabase.auth.signOut();
-        Alert.alert(
-          "Access denied",
-          "Your account was rejected by the society admin.",
-        );
-        router.replace("/signin");
-        return;
-      }
-
-      switch (profile.role) {
-        case "resident":
-          router.replace("/resident-dashboard");
-          break;
-
-        case "admin":
-          router.replace("/admin-dashboard");
-          break;
-
-        case "maintenance":
-          router.replace("/maintenance-dashboard");
-          break;
-
-        case "security":
-          router.replace("/security-dashboard" as any);
-          break;
-
-        default:
-          Alert.alert("Error", "Invalid user role.");
-      }
-    } catch (error) {
+      router.replace(dashboard as any);
+    } catch {
       Alert.alert("Error", "Something went wrong.");
     } finally {
       setLoading(false);
@@ -94,181 +91,79 @@ export default function SignIn() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.safeArea}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
     >
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>‹ Back</Text>
-      </TouchableOpacity>
+      <View style={styles.authContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backText}>‹ Back</Text>
+        </TouchableOpacity>
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to GATED</Text>
-        </View>
+        <View style={styles.authContent}>
+          <View style={styles.authHeader}>
+            <View style={styles.logoTile}>
+              <Text style={styles.logoText}>G</Text>
+            </View>
 
-        <View style={styles.form}>
-          <Text style={styles.label}>Email</Text>
+            <Text style={styles.pageTitle}>Welcome Back</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#A98F82"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+            <Text style={styles.pageSubtitle}>Sign in to GATED</Text>
+          </View>
 
-          <Text style={styles.label}>Password</Text>
+          <View style={styles.form}>
+            <Text style={styles.label}>Email</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#A98F82"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor={colors.placeholder}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
 
-          <TouchableOpacity
-            style={[
-              styles.signInButton,
-              loading && styles.signInButtonDisabled,
-            ]}
-            onPress={handleSignIn}
-            disabled={loading}
-          >
-            <Text style={styles.signInButtonText}>
-              {loading ? "Signing In..." : "Sign In"}
-            </Text>
-          </TouchableOpacity>
+            <Text style={styles.label}>Password</Text>
 
-          <TouchableOpacity
-            style={styles.signUpLink}
-            onPress={() => router.push("/signup")}
-          >
-            <Text style={styles.signUpText}>
-              Don't have an account? <Text style={styles.link}>Sign Up</Text>
-            </Text>
-          </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              placeholderTextColor={colors.placeholder}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                styles.formButton,
+                loading && styles.disabled,
+              ]}
+              onPress={handleSignIn}
+              disabled={loading}
+            >
+              <Text style={styles.primaryButtonText}>
+                {loading ? "Signing In..." : "Sign In"}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.signUpLink}
+              activeOpacity={0.7}
+              onPress={() => router.push("/signup")}
+            >
+              <Text style={styles.signUpText}>
+                Don't have an account? <Text style={styles.link}>Sign Up</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
-        automaticallyAdjustKeyboardInsets
-      ></ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
-    paddingTop: 60,
-  },
-
-  backButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 8,
-    paddingRight: 15,
-  },
-
-  backText: {
-    color: "#6B3E2E",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingBottom: 80,
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: 35,
-  },
-
-  title: {
-    fontSize: 34,
-    fontWeight: "800",
-    color: "#6B3E2E",
-  },
-
-  subtitle: {
-    fontSize: 16,
-    letterSpacing: 0.8,
-    color: "#A65D3B",
-    marginTop: 8,
-  },
-
-  form: {
-    width: "100%",
-  },
-
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#6B3E2E",
-    marginBottom: 7,
-    marginTop: 14,
-  },
-
-  input: {
-    height: 54,
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    backgroundColor: "#FFF8ED",
-    color: "#4E3025",
-    fontSize: 16,
-  },
-
-  signInButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 30,
-  },
-
-  signInButtonDisabled: {
-    opacity: 0.6,
-  },
-
-  signInButtonText: {
-    color: "#FFF8ED",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-
-  signUpLink: {
-    alignItems: "center",
-    marginTop: 22,
-  },
-
-  signUpText: {
-    color: "#6B3E2E",
-    fontSize: 15,
-  },
-
-  link: {
-    color: "#A65D3B",
-    fontWeight: "700",
-  },
-});

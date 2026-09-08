@@ -1,10 +1,10 @@
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+
 import { supabase } from "../lib/supabase";
 
 export default function RootLayout() {
   const router = useRouter();
-  const segments = useSegments();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,23 +14,14 @@ export default function RootLayout() {
       if (data.session?.user) {
         const { data: profile } = await supabase
           .from("users")
-          .select("role, approval_status")
-          .eq("id", data.session.user.id)
+          .select("role")
+          .eq("auth_user_id", data.session.user.id)
           .single();
 
         if (!profile) {
-          router.replace("/signin");
-          return;
-        }
-
-        if (profile.approval_status === "pending") {
-          router.replace("/pending-approval");
-          return;
-        }
-
-        if (profile.approval_status === "rejected") {
           await supabase.auth.signOut();
           router.replace("/signin");
+          setLoading(false);
           return;
         }
 
@@ -41,7 +32,7 @@ export default function RootLayout() {
         } else if (profile.role === "maintenance") {
           router.replace("/maintenance-dashboard");
         } else if (profile.role === "security") {
-          router.replace("/security-dashboard" as any);
+          router.replace("/security-dashboard");
         }
       }
 
@@ -49,12 +40,6 @@ export default function RootLayout() {
     };
 
     checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {});
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
   }, []);
 
   if (loading) {
