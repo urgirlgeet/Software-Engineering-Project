@@ -5,12 +5,14 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+
+import { supabase } from "../lib/supabase";
+import { colors, styles } from "../styles/theme";
 
 export default function Details() {
   const router = useRouter();
@@ -26,6 +28,22 @@ export default function Details() {
 
   const [apartment, setApartment] = useState("");
   const [employeeId, setEmployeeId] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const getDashboard = () => {
+    switch (role) {
+      case "resident":
+        return "/resident-dashboard";
+      case "admin":
+        return "/admin-dashboard";
+      case "security":
+        return "/security-dashboard";
+      case "maintenance":
+        return "/maintenance-dashboard";
+      default:
+        return null;
+    }
+  };
 
   const getTitle = () => {
     switch (role) {
@@ -47,9 +65,7 @@ export default function Details() {
       case "resident":
         return "Enter your apartment details";
       case "admin":
-        return "Enter your admin identification";
       case "security":
-        return "Enter your employee identification";
       case "maintenance":
         return "Enter your employee identification";
       default:
@@ -57,7 +73,7 @@ export default function Details() {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (role === "resident" && !apartment.trim()) {
       Alert.alert("Error", "Please enter your apartment number.");
       return;
@@ -71,28 +87,75 @@ export default function Details() {
       return;
     }
 
-    router.push({
-      pathname: "/complete-signup",
-      params: {
-        name,
-        phone,
-        email,
+    const dashboard = getDashboard();
+
+    if (!dashboard) {
+      Alert.alert("Error", "Invalid user role.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
         password,
-        society,
+      });
+
+      if (error) {
+        Alert.alert("Sign Up Failed", error.message);
+        return;
+      }
+
+      if (!data.user) {
+        Alert.alert("Sign Up Failed", "Unable to create your account.");
+        return;
+      }
+
+      const { data: societyData, error: societyError } = await supabase
+        .from("societies")
+        .select("id")
+        .eq("name", society)
+        .single();
+
+      if (societyError || !societyData) {
+        Alert.alert("Error", "Selected society could not be found.");
+        return;
+      }
+
+      const { error: profileError } = await supabase.from("users").insert({
+        id: data.user.id,
+        auth_user_id: data.user.id,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        society_id: societyData.id,
         role,
-        apartment: role === "resident" ? apartment.trim() : "",
-        employeeId: role !== "resident" ? employeeId.trim() : "",
-      },
-    });
+        approval_status: "approved",
+        apartment_number: role === "resident" ? apartment.trim() : null,
+        employee_id: role !== "resident" ? employeeId.trim() : null,
+      });
+
+      if (profileError) {
+        Alert.alert("Profile Creation Failed", profileError.message);
+        return;
+      }
+
+      router.replace(dashboard as any);
+    } catch {
+      Alert.alert("Error", "Something went wrong while creating your account.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardContainer}
+      style={styles.safeArea}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
@@ -104,17 +167,39 @@ export default function Details() {
           <Text style={styles.backText}>‹ Back</Text>
         </TouchableOpacity>
 
-        <View style={styles.header}>
-          <Text style={styles.title}>{getTitle()}</Text>
-
-          <Text style={styles.subtitle}>{getSubtitle()}</Text>
-
-          <View style={styles.societyBadge}>
-            <Text style={styles.societyText}>{society}</Text>
+        <View style={styles.authHeader}>
+          <View style={styles.logoTile}>
+            <Text style={styles.logoText}>G</Text>
           </View>
+
+          <Text style={styles.eyebrow}>GATED LIVING SANCTUARY</Text>
+
+          <Text style={styles.pageTitle}>{getTitle()}</Text>
+
+          <Text style={styles.pageSubtitle}>{getSubtitle()}</Text>
         </View>
 
         <View style={styles.form}>
+          <View
+            style={[
+              styles.inputWithIcon,
+              {
+                justifyContent: "center",
+                marginBottom: 18,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: colors.brown,
+                fontSize: 14,
+                fontWeight: "600",
+              }}
+            >
+              {society}
+            </Text>
+          </View>
+
           {role === "resident" && (
             <>
               <Text style={styles.label}>Apartment Number</Text>
@@ -122,7 +207,7 @@ export default function Details() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. A-204"
-                placeholderTextColor="#A98F82"
+                placeholderTextColor={colors.placeholder}
                 value={apartment}
                 onChangeText={setApartment}
                 autoCapitalize="characters"
@@ -139,7 +224,7 @@ export default function Details() {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your employee ID"
-                placeholderTextColor="#A98F82"
+                placeholderTextColor={colors.placeholder}
                 value={employeeId}
                 onChangeText={setEmployeeId}
                 autoCapitalize="characters"
@@ -148,113 +233,22 @@ export default function Details() {
           )}
 
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[
+              styles.primaryButton,
+              styles.formButton,
+              loading && styles.disabled,
+            ]}
             onPress={handleContinue}
+            disabled={loading}
           >
-            <Text style={styles.continueText}>Create Account</Text>
+            <Text style={styles.primaryButtonText}>
+              {loading ? "Creating Account..." : "Create Account"}
+            </Text>
+
+            {!loading && <Text style={styles.arrow}>→</Text>}
           </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  keyboardContainer: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-  },
-
-  container: {
-    flexGrow: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-
-  backButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 8,
-    paddingRight: 15,
-    marginBottom: 25,
-  },
-
-  backText: {
-    color: "#6B3E2E",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-
-  title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#6B3E2E",
-    textAlign: "center",
-  },
-
-  subtitle: {
-    fontSize: 15,
-    letterSpacing: 0.5,
-    color: "#A65D3B",
-    marginTop: 7,
-    textAlign: "center",
-  },
-
-  societyBadge: {
-    marginTop: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 20,
-    backgroundColor: "#E8D2BB",
-  },
-
-  societyText: {
-    color: "#6B3E2E",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
-  form: {
-    width: "100%",
-  },
-
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#6B3E2E",
-    marginBottom: 7,
-    marginTop: 12,
-  },
-
-  input: {
-    height: 52,
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    backgroundColor: "#FFF8ED",
-    color: "#4E3025",
-    fontSize: 16,
-  },
-
-  continueButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 30,
-  },
-
-  continueText: {
-    color: "#FFF8ED",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-});

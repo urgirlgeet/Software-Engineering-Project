@@ -14,18 +14,27 @@ import {
     TextInput,
     View,
 } from "react-native";
+
 import { supabase } from "../lib/supabase";
 
 const categories = ["Electrical", "Plumbing", "HVAC", "Security", "Other"];
+
 const priorities = ["low", "medium", "high"] as const;
+
 type RequestType = "complaint" | "maintenance";
 
 export default function Request() {
   const router = useRouter();
-  const { type } = useLocalSearchParams<{ type?: RequestType }>();
+
+  const { type } = useLocalSearchParams<{
+    type?: RequestType;
+  }>();
+
   const requestType: RequestType =
     type === "maintenance" ? "maintenance" : "complaint";
+
   const isMaintenance = requestType === "maintenance";
+
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [priority, setPriority] = useState<(typeof priorities)[number]>("low");
@@ -43,27 +52,37 @@ export default function Request() {
 
     try {
       setSubmitting(true);
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) {
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
         router.replace("/signin");
         return;
       }
 
       const { data: profile, error: profileError } = await supabase
         .from("users")
-        .select("id, society_id")
-        .eq("auth_user_id", authData.user.id)
+        .select("id, society_id, role")
+        .eq("auth_user_id", user.id)
         .single();
 
       if (profileError || !profile) {
+        Alert.alert("Unable to submit", "Your profile could not be found.");
+        return;
+      }
+
+      if (profile.role !== "resident") {
         Alert.alert(
           "Unable to submit",
-          "Your resident profile could not be found.",
+          "Only residents can submit this request.",
         );
         return;
       }
 
       const table = isMaintenance ? "maintenance_requests" : "complaints";
+
       const { error } = await supabase.from(table).insert({
         user_id: profile.id,
         society_id: profile.society_id,
@@ -80,8 +99,10 @@ export default function Request() {
       }
 
       Alert.alert(
-        "Request submitted",
-        `Your ${isMaintenance ? "maintenance request" : "complaint"} has been saved.`,
+        isMaintenance ? "Maintenance request submitted" : "Complaint submitted",
+        isMaintenance
+          ? "Your maintenance request has been submitted successfully."
+          : "Your complaint has been submitted successfully.",
         [
           {
             text: "Done",
@@ -102,6 +123,7 @@ export default function Request() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
+
       <KeyboardAvoidingView
         style={styles.safeArea}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -115,12 +137,15 @@ export default function Request() {
             <Pressable onPress={() => router.back()} style={styles.backButton}>
               <Text style={styles.backArrow}>←</Text>
             </Pressable>
+
             <View style={styles.headerCopy}>
               <Text style={styles.title}>
                 {isMaintenance ? "Request Maintenance" : "Raise Complaint"}
               </Text>
-              <Text style={styles.subtitle}>ESTATE REGISTRY • FLAT 402</Text>
+
+              <Text style={styles.subtitle}>GATED • APARTMENT TRACKER</Text>
             </View>
+
             <View style={styles.headerIcon}>
               <SymbolView
                 name={{
@@ -146,16 +171,21 @@ export default function Request() {
                 size={28}
               />
             </View>
+
             <View style={styles.docketCopy}>
               <Text style={styles.docketTitle}>
-                {isMaintenance ? "Maintenance Docket" : "New Registry Docket"}
+                {isMaintenance ? "Maintenance Request" : "New Complaint"}
               </Text>
+
               <Text style={styles.docketSubtitle}>
-                ESTATE STEWARDSHIP • SECTOR 4
+                {isMaintenance
+                  ? "FACILITY SERVICE REQUEST"
+                  : "RESIDENT ISSUE REPORT"}
               </Text>
             </View>
+
             <View style={styles.draftingPill}>
-              <Text style={styles.draftingText}>DRAFTING</Text>
+              <Text style={styles.draftingText}>NEW</Text>
             </View>
           </View>
 
@@ -178,6 +208,7 @@ export default function Request() {
                 tintColor={!isMaintenance ? colors.white : colors.brown}
                 size={21}
               />
+
               <Text
                 style={[
                   styles.modeText,
@@ -187,6 +218,7 @@ export default function Request() {
                 Complaint
               </Text>
             </Pressable>
+
             <Pressable
               style={[styles.mode, isMaintenance && styles.activeMode]}
               onPress={() =>
@@ -205,6 +237,7 @@ export default function Request() {
                 tintColor={isMaintenance ? colors.white : colors.brown}
                 size={21}
               />
+
               <Text
                 style={[
                   styles.modeText,
@@ -218,19 +251,21 @@ export default function Request() {
 
           <View style={styles.formCard}>
             <Text style={styles.label}>Issue Subject</Text>
+
             <TextInput
               value={title}
               onChangeText={setTitle}
               placeholder={
                 isMaintenance
-                  ? "e.g. Air conditioner not cooling"
-                  : "e.g. Intermittent corridor lighting on 4th floor"
+                  ? "Describe the maintenance issue"
+                  : "Describe the complaint"
               }
               placeholderTextColor="#9DA6B6"
               style={styles.input}
             />
 
             <Text style={styles.label}>Category</Text>
+
             <View style={styles.categoryGrid}>
               {categories.map((item) => (
                 <Pressable
@@ -254,6 +289,7 @@ export default function Request() {
             </View>
 
             <Text style={styles.label}>Priority Level</Text>
+
             <View style={styles.priorityRow}>
               {priorities.map((item) => (
                 <Pressable
@@ -277,13 +313,14 @@ export default function Request() {
             </View>
 
             <Text style={styles.label}>Description</Text>
+
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder={
                 isMaintenance
-                  ? "Describe the facility work required..."
-                  : "Describe the issue in detail for the facility team..."
+                  ? "Describe the facility work required"
+                  : "Describe the issue in detail"
               }
               placeholderTextColor="#9DA6B6"
               multiline
@@ -303,9 +340,11 @@ export default function Request() {
                   size={27}
                 />
               </View>
+
               <Text style={styles.documentationTitle}>
-                Attach photo (optional, image_url)
+                Attach photo (optional)
               </Text>
+
               <Text style={styles.documentationText}>JPEG, PNG up to 10MB</Text>
             </View>
 
@@ -317,6 +356,7 @@ export default function Request() {
               <Text style={styles.submitText}>
                 {submitting ? "Submitting..." : "Submit Request"}
               </Text>
+
               <Text style={styles.submitArrow}>→</Text>
             </Pressable>
           </View>
@@ -336,25 +376,53 @@ const colors = {
   peachStrong: "#F4E5CB",
   white: "#FFFFFF",
 };
+
 const styles = StyleSheet.create({
-  safeArea: { backgroundColor: colors.background, flex: 1 },
-  container: { paddingBottom: 30, paddingHorizontal: 28, paddingTop: 20 },
-  header: { alignItems: "center", flexDirection: "row", marginBottom: 45 },
-  backButton: { paddingRight: 18 },
-  backArrow: { color: colors.ink, fontSize: 42, lineHeight: 42 },
-  headerCopy: { flex: 1 },
+  safeArea: {
+    backgroundColor: colors.background,
+    flex: 1,
+  },
+
+  container: {
+    paddingBottom: 30,
+    paddingHorizontal: 28,
+    paddingTop: 20,
+  },
+
+  header: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: 45,
+  },
+
+  backButton: {
+    paddingRight: 18,
+  },
+
+  backArrow: {
+    color: colors.ink,
+    fontSize: 42,
+    lineHeight: 42,
+  },
+
+  headerCopy: {
+    flex: 1,
+  },
+
   title: {
     color: colors.ink,
     fontFamily: "Georgia",
     fontSize: 29,
     fontWeight: "700",
   },
+
   subtitle: {
     color: colors.brown,
-    fontSize: 18,
+    fontSize: 15,
     letterSpacing: 1.4,
     marginTop: 3,
   },
+
   headerIcon: {
     alignItems: "center",
     backgroundColor: colors.darkBrown,
@@ -363,6 +431,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 56,
   },
+
   docket: {
     alignItems: "center",
     backgroundColor: colors.peach,
@@ -373,6 +442,7 @@ const styles = StyleSheet.create({
     minHeight: 145,
     paddingHorizontal: 28,
   },
+
   docketIcon: {
     alignItems: "center",
     backgroundColor: colors.peachStrong,
@@ -381,16 +451,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 69,
   },
-  docketCopy: { flex: 1, marginLeft: 20 },
-  docketTitle: { color: colors.darkBrown, fontSize: 29 },
-  docketSubtitle: { color: colors.brown, fontSize: 17, marginTop: 4 },
+
+  docketCopy: {
+    flex: 1,
+    marginLeft: 20,
+  },
+
+  docketTitle: {
+    color: colors.darkBrown,
+    fontSize: 25,
+  },
+
+  docketSubtitle: {
+    color: colors.brown,
+    fontSize: 14,
+    marginTop: 4,
+  },
+
   draftingPill: {
     backgroundColor: "#FFF1BF",
     borderRadius: 24,
     paddingHorizontal: 18,
     paddingVertical: 13,
   },
-  draftingText: { color: colors.darkBrown, fontSize: 17 },
+
+  draftingText: {
+    color: colors.darkBrown,
+    fontSize: 15,
+  },
+
   modeSwitch: {
     backgroundColor: colors.peach,
     borderColor: colors.brown,
@@ -400,6 +489,7 @@ const styles = StyleSheet.create({
     marginTop: 34,
     padding: 7,
   },
+
   mode: {
     alignItems: "center",
     borderRadius: 14,
@@ -409,9 +499,21 @@ const styles = StyleSheet.create({
     height: 64,
     justifyContent: "center",
   },
-  activeMode: { backgroundColor: colors.brown },
-  modeText: { color: colors.darkBrown, fontSize: 20 },
-  activeModeText: { color: colors.white, fontWeight: "600" },
+
+  activeMode: {
+    backgroundColor: colors.brown,
+  },
+
+  modeText: {
+    color: colors.darkBrown,
+    fontSize: 20,
+  },
+
+  activeModeText: {
+    color: colors.white,
+    fontWeight: "600",
+  },
+
   formCard: {
     backgroundColor: colors.peach,
     borderColor: colors.brown,
@@ -420,12 +522,14 @@ const styles = StyleSheet.create({
     marginTop: 34,
     padding: 28,
   },
+
   label: {
     color: colors.darkBrown,
     fontSize: 22,
     marginBottom: 12,
     marginTop: 3,
   },
+
   input: {
     backgroundColor: colors.peach,
     borderColor: colors.brown,
@@ -436,7 +540,13 @@ const styles = StyleSheet.create({
     minHeight: 80,
     paddingHorizontal: 27,
   },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+
+  categoryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
   categoryOption: {
     borderColor: colors.brown,
     borderRadius: 15,
@@ -445,10 +555,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 12,
   },
-  categoryText: { color: colors.darkBrown, fontSize: 16, textAlign: "center" },
-  selectedOption: { backgroundColor: colors.brown },
-  selectedText: { color: colors.white, fontWeight: "600" },
-  priorityRow: { flexDirection: "row", gap: 12 },
+
+  categoryText: {
+    color: colors.darkBrown,
+    fontSize: 16,
+    textAlign: "center",
+  },
+
+  selectedOption: {
+    backgroundColor: colors.brown,
+  },
+
+  selectedText: {
+    color: colors.white,
+    fontWeight: "600",
+  },
+
+  priorityRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+
   priorityOption: {
     alignItems: "center",
     borderColor: colors.brown,
@@ -458,9 +585,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 60,
   },
-  selectedPriority: { backgroundColor: colors.brown },
-  priorityText: { color: colors.darkBrown, fontSize: 18 },
-  description: { height: 180, paddingTop: 20 },
+
+  selectedPriority: {
+    backgroundColor: colors.brown,
+  },
+
+  priorityText: {
+    color: colors.darkBrown,
+    fontSize: 18,
+  },
+
+  description: {
+    height: 180,
+    paddingTop: 20,
+  },
+
   documentation: {
     alignItems: "center",
     backgroundColor: colors.peachStrong,
@@ -472,6 +611,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 28,
   },
+
   cameraIcon: {
     alignItems: "center",
     backgroundColor: colors.white,
@@ -480,13 +620,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 56,
   },
+
   documentationTitle: {
     color: colors.darkBrown,
     fontSize: 18,
     marginTop: 17,
     textAlign: "center",
   },
-  documentationText: { color: colors.brown, fontSize: 16, marginTop: 7 },
+
+  documentationText: {
+    color: colors.brown,
+    fontSize: 16,
+    marginTop: 7,
+  },
+
   submitButton: {
     alignItems: "center",
     backgroundColor: colors.brown,
@@ -496,7 +643,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 38,
   },
-  disabled: { opacity: 0.6 },
-  submitText: { color: colors.white, fontSize: 26, fontWeight: "600" },
-  submitArrow: { color: colors.white, fontSize: 34, marginLeft: 18 },
+
+  disabled: {
+    opacity: 0.6,
+  },
+
+  submitText: {
+    color: colors.white,
+    fontSize: 26,
+    fontWeight: "600",
+  },
+
+  submitArrow: {
+    color: colors.white,
+    fontSize: 34,
+    marginLeft: 18,
+  },
 });

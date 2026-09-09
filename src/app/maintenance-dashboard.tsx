@@ -1,157 +1,222 @@
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Alert,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
+
 import { supabase } from "../lib/supabase";
+import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
+
+import ComplaintCard, {
+    AdminComplaint,
+} from "../components/admin/ComplaintCard";
+
+type MaintenanceProfile = {
+  name: string;
+  employee_id: string;
+  society_id: string;
+};
 
 export default function MaintenanceDashboard() {
   const router = useRouter();
+
   const [checking, setChecking] = useState(true);
+  const [profile, setProfile] = useState<MaintenanceProfile | null>(null);
+  const [societyName, setSocietyName] = useState("");
+  const [complaints, setComplaints] = useState<AdminComplaint[]>([]);
 
   useEffect(() => {
-    checkAccess();
+    loadDashboard();
   }, []);
 
-  const checkAccess = async () => {
-    const { data } = await supabase.auth.getUser();
+  const loadDashboard = async () => {
+    try {
+      const { data: authData } = await supabase.auth.getUser();
 
-    if (!data.user) {
-      router.replace("/signin");
-      return;
+      if (!authData.user) {
+        router.replace("/signin");
+        return;
+      }
+
+      const { data: maintenance, error } = await supabase
+        .from("users")
+        .select("id, name, employee_id, society_id, role")
+        .eq("auth_user_id", authData.user.id)
+        .single();
+
+      if (error || !maintenance || maintenance.role !== "maintenance") {
+        Alert.alert(
+          "Access Denied",
+          "You do not have access to this dashboard.",
+        );
+
+        router.replace("/signin");
+        return;
+      }
+
+      setProfile({
+        name: maintenance.name,
+        employee_id: maintenance.employee_id,
+        society_id: maintenance.society_id,
+      });
+
+      const { data: society } = await supabase
+        .from("societies")
+        .select("name")
+        .eq("id", maintenance.society_id)
+        .single();
+
+      if (society?.name) {
+        setSocietyName(society.name);
+      }
+
+      const { data: complaintData, error: complaintError } = await supabase
+        .from("complaints")
+        .select(
+          "id, title, category, priority, status, created_at, assigned_to",
+        )
+        .eq("assigned_to", maintenance.id)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      if (complaintError) {
+        console.log("Complaint fetch error:", complaintError);
+        return;
+      }
+
+      setComplaints(complaintData || []);
+    } catch (error) {
+      console.log("Maintenance dashboard error:", error);
+
+      Alert.alert("Error", "Unable to load your dashboard.");
+    } finally {
+      setChecking(false);
     }
-
-    const { data: profile, error } = await supabase
-      .from("users")
-      .select("role")
-      .eq("auth_user_id", data.user.id)
-      .single();
-
-    if (error || !profile || profile.role !== "maintenance") {
-      Alert.alert("Access Denied", "You do not have access to this dashboard.");
-      router.replace("/signin");
-      return;
-    }
-
-    setChecking(false);
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.replace("/signin");
+    router.replace("/");
   };
 
   if (checking) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={dashboardStyles.loadingContainer}>
+        <Text style={dashboardStyles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
 
+  if (!profile) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Maintenance Dashboard</Text>
-        <Text style={styles.subtitle}>Society operations</Text>
-      </View>
+    <SafeAreaView style={dashboardStyles.safeArea}>
+      <StatusBar style="dark" />
 
-      <View style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Tasks</Text>
-          <Text style={styles.cardText}>View assigned maintenance tasks</Text>
+      <ScrollView
+        contentContainerStyle={dashboardStyles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={dashboardStyles.topBar}>
+          <View>
+            <Text style={dashboardStyles.pageTitle}>GATED</Text>
+
+            <Text style={dashboardStyles.pageSubtitle}>MAINTENANCE</Text>
+          </View>
+
+          <Pressable
+            style={dashboardStyles.homeMark}
+            onPress={() => router.push("/maintenance-dashboard")}
+          >
+            <Text
+              style={{
+                color: dashboardColors.white,
+                fontSize: 18,
+              }}
+            >
+              ⌂
+            </Text>
+          </Pressable>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Complaints</Text>
-          <Text style={styles.cardText}>View assigned complaints</Text>
+        <View style={dashboardStyles.profileBanner}>
+          <View style={dashboardStyles.profileCopy}>
+            <Text style={dashboardStyles.bannerEyebrow}>MAINTENANCE STAFF</Text>
+
+            <Text style={dashboardStyles.greeting}>
+              Welcome, {profile.name}
+            </Text>
+
+            <View style={dashboardStyles.addressLine}>
+              <Text style={dashboardStyles.address}>
+                Employee ID: {profile.employee_id}
+              </Text>
+            </View>
+
+            <Text
+              style={[dashboardStyles.address, { marginLeft: 0, marginTop: 5 }]}
+            >
+              {societyName}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Announcements</Text>
-          <Text style={styles.cardText}>View society announcements</Text>
-        </View>
-      </View>
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>
+              Assigned Complaints
+            </Text>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
-        <Text style={styles.logoutText}>Sign Out</Text>
-      </TouchableOpacity>
-    </View>
+            <Text style={dashboardStyles.count}>{complaints.length}</Text>
+          </View>
+        </View>
+
+        {complaints.length === 0 ? (
+          <View style={dashboardStyles.requestCard}>
+            <Text style={dashboardStyles.statusText}>
+              No complaints assigned to you.
+            </Text>
+          </View>
+        ) : (
+          complaints.map((complaint) => (
+            <ComplaintCard key={complaint.id} complaint={complaint} />
+          ))
+        )}
+
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>Announcements</Text>
+          </View>
+        </View>
+
+        <Pressable
+          style={dashboardStyles.requestCard}
+          onPress={() => router.push("/notices" as any)}
+        >
+          <Text style={dashboardStyles.requestTitle}>
+            Society Announcements
+          </Text>
+
+          <Text style={[dashboardStyles.requestDate, { marginTop: 5 }]}>
+            View society announcements
+          </Text>
+        </Pressable>
+
+        <Pressable style={dashboardStyles.requestCard} onPress={handleSignOut}>
+          <Text style={dashboardStyles.requestTitle}>Sign Out</Text>
+        </Pressable>
+
+        <View style={{ height: 70 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  loadingText: {
-    color: "#6B3E2E",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
-    paddingTop: 60,
-  },
-
-  header: {
-    marginBottom: 30,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#6B3E2E",
-  },
-
-  subtitle: {
-    fontSize: 16,
-    color: "#A65D3B",
-    marginTop: 7,
-  },
-
-  content: {
-    gap: 15,
-  },
-
-  card: {
-    backgroundColor: "#FFF8ED",
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 14,
-    padding: 20,
-  },
-
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#6B3E2E",
-  },
-
-  cardText: {
-    fontSize: 14,
-    color: "#A65D3B",
-    marginTop: 6,
-  },
-
-  logoutButton: {
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: "auto",
-    marginBottom: 30,
-  },
-
-  logoutText: {
-    color: "#FFF8ED",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

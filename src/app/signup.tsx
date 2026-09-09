@@ -1,3 +1,5 @@
+// src/app/signup.tsx
+
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SymbolView } from "expo-symbols";
@@ -7,12 +9,13 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+
+import { colors, styles } from "../styles/theme";
 
 export default function SignUp() {
   const router = useRouter();
@@ -22,7 +25,6 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleNext = () => {
     if (!name || !phone || !email || !password || !confirmPassword) {
@@ -53,16 +55,17 @@ export default function SignUp() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardContainer}
+      style={styles.safeArea}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <StatusBar style="dark" />
+
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <View style={styles.formHeader}>
           <View style={styles.logoTile}>
             <SymbolView
               name={{
@@ -74,9 +77,12 @@ export default function SignUp() {
               size={32}
             />
           </View>
-          <Text style={styles.eyebrow}>GATED LIVING SANCTUARY</Text>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>
+
+          <Text style={styles.eyebrow}>GATED</Text>
+
+          <Text style={styles.pageTitle}>Create Account</Text>
+
+          <Text style={styles.pageSubtitle}>
             Join your gated residential community.
           </Text>
         </View>
@@ -84,34 +90,46 @@ export default function SignUp() {
         <View style={styles.card}>
           <View style={styles.sectionHeading}>
             <SymbolView
-              name={{ ios: "person", android: "person", web: "person" }}
+              name={{
+                ios: "person",
+                android: "person",
+                web: "person",
+              }}
               tintColor={colors.brown}
               size={22}
             />
+
             <Text style={styles.sectionTitle}>Resident Particulars</Text>
           </View>
 
           <Text style={styles.label}>Full Name</Text>
+
           <TextInput
             style={styles.input}
-            placeholder="Alexandra Chen"
-            placeholderTextColor="#6D5952"
+            placeholder="Enter your full name"
+            placeholderTextColor={colors.placeholder}
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
           />
 
           <Text style={styles.label}>Mobile Contact</Text>
+
           <View style={styles.inputWithIcon}>
             <SymbolView
-              name={{ ios: "phone", android: "phone", web: "phone" }}
+              name={{
+                ios: "phone",
+                android: "phone",
+                web: "phone",
+              }}
               tintColor={colors.muted}
               size={20}
             />
+
             <TextInput
               style={styles.iconInput}
-              placeholder="+1 (555) 382-9014"
-              placeholderTextColor="#6D5952"
+              placeholder="Enter your mobile number"
+              placeholderTextColor={colors.placeholder}
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -119,16 +137,22 @@ export default function SignUp() {
           </View>
 
           <Text style={styles.label}>Email Address</Text>
+
           <View style={styles.inputWithIcon}>
             <SymbolView
-              name={{ ios: "envelope", android: "mail", web: "mail" }}
+              name={{
+                ios: "envelope",
+                android: "mail",
+                web: "mail",
+              }}
               tintColor={colors.muted}
               size={20}
             />
+
             <TextInput
               style={styles.iconInput}
-              placeholder="alexandra@estate.com"
-              placeholderTextColor="#6D5952"
+              placeholder="Enter your email"
+              placeholderTextColor={colors.placeholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -138,9 +162,10 @@ export default function SignUp() {
           </View>
 
           <Text style={styles.label}>Password</Text>
+
           <TextInput
             style={styles.input}
-            placeholder="••••••••••••••"
+            placeholder="Enter your password"
             placeholderTextColor={colors.ink}
             value={password}
             onChangeText={setPassword}
@@ -148,9 +173,10 @@ export default function SignUp() {
           />
 
           <Text style={styles.label}>Confirm Password</Text>
+
           <TextInput
             style={styles.input}
-            placeholder="••••••••••••••"
+            placeholder="Confirm your password"
             placeholderTextColor={colors.ink}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -159,169 +185,19 @@ export default function SignUp() {
         </View>
 
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.primaryButton, styles.formButton]}
           onPress={handleNext}
-          disabled={loading}
         >
-          <Text style={styles.buttonText}>Create Account</Text>
+          <Text style={styles.primaryButtonText}>Create Account</Text>
+
           <Text style={styles.arrow}>→</Text>
         </TouchableOpacity>
 
         <Text style={styles.terms}>
-          By registering, you agree to the estate bylaws and resident{"\n"}
-          charter of your selected community.
+          By registering, you agree to the estate bylaws and resident charter of
+          your selected community.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const colors = {
-  background: "#FFF9F7",
-  brown: "#91441F",
-  ink: "#24100A",
-  muted: "#806D66",
-  peach: "#FFF0EB",
-  white: "#FFFFFF",
-};
-
-const styles = StyleSheet.create({
-  keyboardContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
-  container: {
-    flexGrow: 1,
-    backgroundColor: colors.background,
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 34,
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: 28,
-  },
-
-  logoTile: {
-    alignItems: "center",
-    backgroundColor: "#FFE9E2",
-    borderRadius: 17,
-    height: 63,
-    justifyContent: "center",
-    marginBottom: 13,
-    width: 63,
-  },
-
-  eyebrow: {
-    color: colors.brown,
-    fontFamily: "Georgia",
-    fontSize: 12,
-    letterSpacing: 1.2,
-    marginBottom: 8,
-  },
-
-  title: {
-    color: colors.ink,
-    fontFamily: "Georgia",
-    fontSize: 26,
-    fontWeight: "700",
-  },
-
-  subtitle: {
-    color: "#4E3D38",
-    fontSize: 16,
-    marginTop: 9,
-  },
-
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 13,
-    paddingHorizontal: 18,
-    paddingVertical: 20,
-    shadowColor: "#6F3D2A",
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-
-  sectionHeading: {
-    alignItems: "center",
-    flexDirection: "row",
-    marginBottom: 9,
-  },
-
-  sectionTitle: {
-    color: colors.ink,
-    fontFamily: "Georgia",
-    fontSize: 22,
-    fontWeight: "700",
-    marginLeft: 12,
-  },
-
-  label: {
-    color: colors.ink,
-    fontSize: 15,
-    marginBottom: 6,
-    marginTop: 13,
-  },
-
-  input: {
-    backgroundColor: colors.peach,
-    borderRadius: 10,
-    color: colors.ink,
-    fontSize: 16,
-    height: 41,
-    paddingHorizontal: 13,
-  },
-
-  inputWithIcon: {
-    alignItems: "center",
-    backgroundColor: colors.peach,
-    borderRadius: 10,
-    flexDirection: "row",
-    height: 44,
-    paddingHorizontal: 13,
-  },
-
-  iconInput: {
-    color: colors.ink,
-    flex: 1,
-    fontSize: 16,
-    height: 44,
-    marginLeft: 10,
-  },
-
-  button: {
-    alignItems: "center",
-    backgroundColor: colors.brown,
-    borderRadius: 12,
-    flexDirection: "row",
-    height: 53,
-    justifyContent: "center",
-    marginTop: 31,
-  },
-
-  buttonText: {
-    color: colors.white,
-    fontSize: 19,
-    fontWeight: "600",
-  },
-
-  arrow: {
-    color: colors.white,
-    fontSize: 25,
-    marginLeft: 11,
-  },
-
-  terms: {
-    color: "#4E3D38",
-    fontFamily: "Georgia",
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 13,
-    textAlign: "center",
-  },
-});

@@ -1,10 +1,10 @@
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+
 import { supabase } from "../lib/supabase";
 
 export default function RootLayout() {
   const router = useRouter();
-  const segments = useSegments();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,14 +18,21 @@ export default function RootLayout() {
           .eq("auth_user_id", data.session.user.id)
           .single();
 
-        if (profile?.role === "resident") {
+        if (!profile) {
+          await supabase.auth.signOut();
+          router.replace("/signin");
+          setLoading(false);
+          return;
+        }
+
+        if (profile.role === "resident") {
           router.replace("/resident-dashboard");
-        } else if (profile?.role === "admin") {
+        } else if (profile.role === "admin") {
           router.replace("/admin-dashboard");
-        } else if (profile?.role === "maintenance") {
+        } else if (profile.role === "maintenance") {
           router.replace("/maintenance-dashboard");
-        } else if (profile?.role === "security") {
-          router.replace("/security-dashboard" as any);
+        } else if (profile.role === "security") {
+          router.replace("/security-dashboard");
         }
       }
 
@@ -33,12 +40,6 @@ export default function RootLayout() {
     };
 
     checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {});
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
   }, []);
 
   if (loading) {
