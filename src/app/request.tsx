@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   SafeAreaView,
@@ -51,6 +52,7 @@ export default function Request() {
   const [priority, setPriority] = useState<(typeof priorities)[number]>("low");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
   const [existingRequest, setExistingRequest] =
     useState<ExistingRequest | null>(null);
   const [loadingRequest, setLoadingRequest] = useState(Boolean(id));
@@ -60,12 +62,33 @@ export default function Request() {
 
     const loadRequest = async () => {
       const table = isMaintenance ? "maintenance_requests" : "complaints";
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/signin");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (!profile) {
+        setLoadingRequest(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from(table)
         .select(
           "title, category, priority, status, description, created_at, updated_at",
         )
         .eq("id", id)
+        .eq("user_id", profile.id)
         .single();
 
       if (error || !data) {
@@ -209,7 +232,7 @@ export default function Request() {
                 {isMaintenance ? "Request Maintenance" : "Raise Complaint"}
               </Text>
 
-              <Text style={styles.subtitle}>GATED • APARTMENT TRACKER</Text>
+              <Text style={styles.subtitle}>ESTATE REGISTRY • FLAT 402</Text>
             </View>
 
             <View style={styles.headerIcon}>
@@ -240,18 +263,18 @@ export default function Request() {
 
             <View style={styles.docketCopy}>
               <Text style={styles.docketTitle}>
-                {isMaintenance ? "Maintenance Request" : "New Complaint"}
+                {isMaintenance ? "Maintenance Request" : "New Registry Docket"}
               </Text>
 
               <Text style={styles.docketSubtitle}>
                 {isMaintenance
                   ? "FACILITY SERVICE REQUEST"
-                  : "RESIDENT ISSUE REPORT"}
+                  : "ESTATE STEWARDSHIP • SECTOR 4"}
               </Text>
             </View>
 
             <View style={styles.draftingPill}>
-              <Text style={styles.draftingText}>NEW</Text>
+              <Text style={styles.draftingText}>DRAFTING</Text>
             </View>
           </View>
 
@@ -324,7 +347,7 @@ export default function Request() {
               placeholder={
                 isMaintenance
                   ? "Describe the maintenance issue"
-                  : "Describe the complaint"
+                  : "e.g. Intermittent corridor lighting on 4th floor"
               }
               placeholderTextColor="#9DA6B6"
               style={styles.input}
@@ -332,27 +355,45 @@ export default function Request() {
 
             <Text style={styles.label}>Category</Text>
 
-            <View style={styles.categoryGrid}>
-              {categories.map((item) => (
-                <Pressable
-                  key={item}
-                  onPress={() => setCategory(item)}
-                  style={[
-                    styles.categoryOption,
-                    category === item && styles.selectedOption,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.categoryText,
-                      category === item && styles.selectedText,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <Pressable
+              style={styles.categorySelector}
+              onPress={() => setCategoryOpen(true)}
+            >
+              <Text
+                style={[styles.categoryValue, !category && styles.placeholder]}
+              >
+                {category || "Select Category"}
+              </Text>
+              <Text style={styles.categoryChevron}>⌄</Text>
+            </Pressable>
+
+            <Modal
+              visible={categoryOpen}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setCategoryOpen(false)}
+            >
+              <Pressable
+                style={styles.modalBackdrop}
+                onPress={() => setCategoryOpen(false)}
+              >
+                <View style={styles.categoryMenu}>
+                  <Text style={styles.categoryMenuTitle}>Select Category</Text>
+                  {categories.map((item) => (
+                    <Pressable
+                      key={item}
+                      style={styles.categoryMenuOption}
+                      onPress={() => {
+                        setCategory(item);
+                        setCategoryOpen(false);
+                      }}
+                    >
+                      <Text style={styles.categoryMenuText}>{item}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </Pressable>
+            </Modal>
 
             <Text style={styles.label}>Priority Level</Text>
 
@@ -386,7 +427,7 @@ export default function Request() {
               placeholder={
                 isMaintenance
                   ? "Describe the facility work required"
-                  : "Describe the issue in detail"
+                  : "Describe the issue in detail for the facility team..."
               }
               placeholderTextColor="#9DA6B6"
               multiline
@@ -408,7 +449,7 @@ export default function Request() {
               </View>
 
               <Text style={styles.documentationTitle}>
-                Attach photo (optional)
+                Attach photo (optional, image_url)
               </Text>
 
               <Text style={styles.documentationText}>JPEG, PNG up to 10MB</Text>
@@ -785,6 +826,66 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+  },
+
+  categorySelector: {
+    alignItems: "center",
+    backgroundColor: colors.peach,
+    borderColor: colors.brown,
+    borderRadius: 17,
+    borderWidth: 1.5,
+    flexDirection: "row",
+    height: 80,
+    justifyContent: "space-between",
+    paddingHorizontal: 27,
+  },
+
+  categoryValue: {
+    color: colors.darkBrown,
+    fontSize: 19,
+  },
+
+  placeholder: {
+    color: "#9DA6B6",
+  },
+
+  categoryChevron: {
+    color: colors.brown,
+    fontSize: 27,
+    fontWeight: "700",
+  },
+
+  modalBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(58, 27, 16, 0.28)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 28,
+  },
+
+  categoryMenu: {
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    padding: 20,
+    width: "100%",
+  },
+
+  categoryMenuTitle: {
+    color: colors.darkBrown,
+    fontFamily: "Georgia",
+    fontSize: 22,
+    marginBottom: 8,
+  },
+
+  categoryMenuOption: {
+    borderTopColor: "#F0DCD0",
+    borderTopWidth: 1,
+    paddingVertical: 15,
+  },
+
+  categoryMenuText: {
+    color: colors.ink,
+    fontSize: 17,
   },
 
   categoryOption: {

@@ -25,6 +25,21 @@ type Profile = {
   society_id: string | null;
 };
 
+type Booking = {
+  id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+};
+
+type Notice = {
+  id: string;
+  title: string;
+  priority: string | null;
+  created_at: string;
+};
+
 export default function ResidentDashboard() {
   const router = useRouter();
 
@@ -39,6 +54,8 @@ export default function ResidentDashboard() {
   const [maintenanceRequests, setMaintenanceRequests] = useState<RequestItem[]>(
     [],
   );
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -135,6 +152,30 @@ export default function ResidentDashboard() {
             item !== null && typeof item === "object",
         ),
       );
+
+      const { data: bookingData, error: bookingError } = await supabase
+        .from("amenity_bookings")
+        .select("id, booking_date, start_time, end_time, status")
+        .eq("resident_id", userProfile.id)
+        .order("booking_date", { ascending: true })
+        .limit(3);
+
+      if (bookingError) {
+        console.log("Booking fetch error:", bookingError);
+      }
+      setBookings(bookingData || []);
+
+      const { data: noticeData, error: noticeError } = await supabase
+        .from("notices")
+        .select("id, title, priority, created_at")
+        .eq("society_id", userProfile.society_id)
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (noticeError) {
+        console.log("Notice fetch error:", noticeError);
+      }
+      setNotices(noticeData || []);
     } catch (error) {
       console.log("Dashboard error:", error);
       Alert.alert("Error", "Something went wrong while loading the dashboard.");
@@ -201,12 +242,45 @@ export default function ResidentDashboard() {
           />
 
           <QuickActionCard
-            icon="megaphone"
-            title="Notices"
-            detail="View announcements"
-            onPress={() => router.push("/notices" as any)}
+            icon="leaf"
+            title="Book Amenity"
+            detail="Private salons & courts"
+            onPress={() => router.push("/explore")}
           />
         </View>
+
+        <SectionHeading
+          title="Upcoming Bookings"
+          count={bookings.length.toString()}
+          action="View All"
+        />
+        {bookings.length === 0 ? (
+          <View style={dashboardStyles.requestCard}>
+            <Text style={dashboardStyles.statusText}>
+              No upcoming bookings.
+            </Text>
+          </View>
+        ) : (
+          bookings.map((booking) => (
+            <View key={booking.id} style={dashboardStyles.bookingCard}>
+              <View style={dashboardStyles.bookingHeader}>
+                <Text style={dashboardStyles.bookingTitle}>
+                  Amenity reservation
+                </Text>
+                <Text style={dashboardStyles.confirmedText}>
+                  {booking.status}
+                </Text>
+              </View>
+              <Text style={dashboardStyles.bookingMeta}>
+                {new Date(booking.booking_date).toLocaleDateString()} ·{" "}
+                {booking.start_time} – {booking.end_time}
+              </Text>
+              <Text style={dashboardStyles.bookingCode}>
+                Managed through the society amenity registry
+              </Text>
+            </View>
+          ))
+        )}
 
         <SectionHeading
           title="My Active Complaints"
@@ -281,6 +355,32 @@ export default function ResidentDashboard() {
 
           <Text style={dashboardStyles.requestShortcutArrow}>→</Text>
         </Pressable>
+
+        <SectionHeading title="Recent Notices" action="Community Board" />
+        <View style={dashboardStyles.noticeCard}>
+          {notices.length === 0 ? (
+            <Text style={dashboardStyles.statusText}>No recent notices.</Text>
+          ) : (
+            notices.map((notice) => (
+              <View key={notice.id} style={dashboardStyles.noticeRow}>
+                <View style={dashboardStyles.noticeIcon}>
+                  <Text style={dashboardStyles.noticeIconText}>≡</Text>
+                </View>
+                <View style={dashboardStyles.noticeCopy}>
+                  <Text numberOfLines={1} style={dashboardStyles.noticeTitle}>
+                    {notice.title}
+                  </Text>
+                  <Text style={dashboardStyles.noticeDate}>
+                    Posted: {new Date(notice.created_at).toLocaleDateString()}
+                  </Text>
+                </View>
+                <Text style={dashboardStyles.noticePriority}>
+                  {notice.priority || "General"}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
       </ScrollView>
 
       <ResidentBottomNav

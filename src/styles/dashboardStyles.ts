@@ -244,6 +244,102 @@ export const dashboardStyles = StyleSheet.create({
     fontSize: 20,
   },
 
+  bookingCard: {
+    backgroundColor: dashboardColors.white,
+    borderRadius: 11,
+    marginBottom: 11,
+    padding: 14,
+  },
+
+  bookingHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  bookingTitle: {
+    color: dashboardColors.ink,
+    fontFamily: "Georgia",
+    fontSize: 17,
+  },
+
+  bookingMeta: {
+    color: dashboardColors.muted,
+    fontSize: 13,
+    marginTop: 9,
+  },
+
+  bookingCode: {
+    backgroundColor: dashboardColors.peach,
+    borderRadius: 7,
+    color: dashboardColors.brown,
+    fontSize: 11,
+    marginTop: 12,
+    padding: 9,
+  },
+
+  confirmedText: {
+    backgroundColor: dashboardColors.green,
+    borderRadius: 12,
+    color: dashboardColors.greenText,
+    fontSize: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+
+  noticeCard: {
+    backgroundColor: dashboardColors.white,
+    borderRadius: 11,
+    marginBottom: 12,
+    overflow: "hidden",
+    padding: 14,
+  },
+
+  noticeRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    minHeight: 58,
+  },
+
+  noticeIcon: {
+    alignItems: "center",
+    backgroundColor: dashboardColors.peachStrong,
+    borderRadius: 20,
+    height: 36,
+    justifyContent: "center",
+    width: 36,
+  },
+
+  noticeIconText: {
+    color: dashboardColors.brown,
+    fontSize: 20,
+  },
+
+  noticeCopy: {
+    flex: 1,
+    marginLeft: 12,
+  },
+
+  noticeTitle: {
+    color: dashboardColors.ink,
+    fontSize: 15,
+  },
+
+  noticeDate: {
+    color: dashboardColors.muted,
+    fontSize: 11,
+    marginTop: 4,
+  },
+
+  noticePriority: {
+    backgroundColor: dashboardColors.peachStrong,
+    borderRadius: 11,
+    color: dashboardColors.brown,
+    fontSize: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+
   requestHeader: {
     alignItems: "center",
     flexDirection: "row",
