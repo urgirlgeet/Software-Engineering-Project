@@ -54,7 +54,25 @@ export default function CompleteSignup() {
         return;
       }
 
-      // 3. Create user profile
+      let apartmentId: string | null = null;
+
+      if (role === "resident") {
+        const { data: apartmentData, error: apartmentError } = await supabase
+          .from("apartments")
+          .select("id")
+          .eq("society_id", societyData.id)
+          .eq("flat_number", apartment.trim())
+          .single();
+
+        if (apartmentError || !apartmentData) {
+          setError("Selected apartment could not be found in this society.");
+          return;
+        }
+
+        apartmentId = apartmentData.id;
+      }
+
+      // 3. Create user profile using the existing users/apartments relationship.
       const { error: profileError } = await supabase.from("users").insert({
         id: data.user.id,
         auth_user_id: data.user.id,
@@ -63,8 +81,7 @@ export default function CompleteSignup() {
         phone: phone.trim(),
         society_id: societyData.id,
         role: role,
-        apartment_number: role === "resident" ? apartment.trim() : null,
-        employee_id: role !== "resident" ? employeeId.trim() : null,
+        apartment_id: apartmentId,
       });
 
       if (profileError) {

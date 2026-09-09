@@ -15,7 +15,7 @@ export default function RootLayout() {
         const { data: profile } = await supabase
           .from("users")
           .select("role")
-          .eq("id", data.session.user.id)
+          .eq("auth_user_id", data.session.user.id)
           .single();
 
         if (profile?.role === "resident") {
