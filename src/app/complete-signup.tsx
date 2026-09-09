@@ -89,8 +89,31 @@ export default function CompleteSignup() {
         return;
       }
 
-      // 4. Approval pending
-      router.replace("/pending-approval");
+      if (role === "admin") {
+        const { error: requestError } = await supabase
+          .from("society_admin_requests")
+          .insert({
+            user_id: data.user.id,
+            society_id: societyData.id,
+            status: "pending",
+            requested_at: new Date().toISOString(),
+          });
+
+        if (requestError) {
+          setError(requestError.message);
+          return;
+        }
+
+        router.replace("/pending-approval");
+      } else if (role === "resident") {
+        router.replace("/resident-dashboard");
+      } else if (role === "maintenance") {
+        router.replace("/maintenance-dashboard");
+      } else if (role === "security") {
+        router.replace("/security-dashboard");
+      } else {
+        setError("Invalid user role.");
+      }
     } catch (error) {
       setError("Something went wrong while creating your account.");
     }

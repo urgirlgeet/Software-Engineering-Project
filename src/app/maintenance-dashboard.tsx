@@ -19,7 +19,6 @@ import ComplaintCard, {
 
 type MaintenanceProfile = {
   name: string;
-  employee_id: string;
   society_id: string;
 };
 
@@ -46,7 +45,7 @@ export default function MaintenanceDashboard() {
 
       const { data: maintenance, error } = await supabase
         .from("users")
-        .select("id, name, employee_id, society_id, role")
+        .select("id, name, society_id, role")
         .eq("auth_user_id", authData.user.id)
         .single();
 
@@ -62,7 +61,6 @@ export default function MaintenanceDashboard() {
 
       setProfile({
         name: maintenance.name,
-        employee_id: maintenance.employee_id,
         society_id: maintenance.society_id,
       });
 
@@ -155,12 +153,6 @@ export default function MaintenanceDashboard() {
             <Text style={dashboardStyles.greeting}>
               Welcome, {profile.name}
             </Text>
-
-            <View style={dashboardStyles.addressLine}>
-              <Text style={dashboardStyles.address}>
-                Employee ID: {profile.employee_id}
-              </Text>
-            </View>
 
             <Text
               style={[dashboardStyles.address, { marginLeft: 0, marginTop: 5 }]}

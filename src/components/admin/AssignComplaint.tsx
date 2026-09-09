@@ -37,8 +37,8 @@ export default function AssignComplaintModal({
 
       const { data: employee, error: employeeError } = await supabase
         .from("users")
-        .select("id, name, employee_id")
-        .eq("employee_id", employeeId.trim())
+        .select("id, name")
+        .eq("id", employeeId.trim())
         .eq("society_id", societyId)
         .eq("role", "maintenance")
         .single();
@@ -46,7 +46,7 @@ export default function AssignComplaintModal({
       if (employeeError || !employee) {
         Alert.alert(
           "Employee not found",
-          "No maintenance employee with this ID was found in your society.",
+          "No maintenance user with this ID was found in your society.",
         );
         return;
       }
@@ -95,13 +95,13 @@ export default function AssignComplaintModal({
           <Text style={dashboardStyles.sectionTitle}>Assign Complaint</Text>
 
           <Text style={[dashboardStyles.statusText, { marginTop: 8 }]}>
-            Enter the maintenance employee ID.
+            Enter the maintenance user ID.
           </Text>
 
           <TextInput
             value={employeeId}
             onChangeText={setEmployeeId}
-            placeholder="Employee ID"
+            placeholder="Maintenance user ID"
             placeholderTextColor={dashboardColors.muted}
             autoCapitalize="none"
             style={{

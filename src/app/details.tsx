@@ -11,7 +11,6 @@ import {
     View,
 } from "react-native";
 
-import { supabase } from "../lib/supabase";
 import { colors, styles } from "../styles/theme";
 
 export default function Details() {
@@ -28,22 +27,6 @@ export default function Details() {
 
   const [apartment, setApartment] = useState("");
   const [employeeId, setEmployeeId] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const getDashboard = () => {
-    switch (role) {
-      case "resident":
-        return "/resident-dashboard";
-      case "admin":
-        return "/admin-dashboard";
-      case "security":
-        return "/security-dashboard";
-      case "maintenance":
-        return "/maintenance-dashboard";
-      default:
-        return null;
-    }
-  };
 
   const getTitle = () => {
     switch (role) {
@@ -73,7 +56,7 @@ export default function Details() {
     }
   };
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (role === "resident" && !apartment.trim()) {
       Alert.alert("Error", "Please enter your apartment number.");
       return;
@@ -87,66 +70,24 @@ export default function Details() {
       return;
     }
 
-    const dashboard = getDashboard();
-
-    if (!dashboard) {
+    if (!role) {
       Alert.alert("Error", "Invalid user role.");
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+    router.push({
+      pathname: "/complete-signup",
+      params: {
+        name,
+        phone,
+        email,
         password,
-      });
-
-      if (error) {
-        Alert.alert("Sign Up Failed", error.message);
-        return;
-      }
-
-      if (!data.user) {
-        Alert.alert("Sign Up Failed", "Unable to create your account.");
-        return;
-      }
-
-      const { data: societyData, error: societyError } = await supabase
-        .from("societies")
-        .select("id")
-        .eq("name", society)
-        .single();
-
-      if (societyError || !societyData) {
-        Alert.alert("Error", "Selected society could not be found.");
-        return;
-      }
-
-      const { error: profileError } = await supabase.from("users").insert({
-        id: data.user.id,
-        auth_user_id: data.user.id,
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        society_id: societyData.id,
+        society,
         role,
-        approval_status: "approved",
-        apartment_number: role === "resident" ? apartment.trim() : null,
-        employee_id: role !== "resident" ? employeeId.trim() : null,
-      });
-
-      if (profileError) {
-        Alert.alert("Profile Creation Failed", profileError.message);
-        return;
-      }
-
-      router.replace(dashboard as any);
-    } catch {
-      Alert.alert("Error", "Something went wrong while creating your account.");
-    } finally {
-      setLoading(false);
-    }
+        apartment: role === "resident" ? apartment.trim() : "",
+        employeeId: role !== "resident" ? employeeId.trim() : "",
+      },
+    });
   };
 
   return (
@@ -233,19 +174,11 @@ export default function Details() {
           )}
 
           <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              styles.formButton,
-              loading && styles.disabled,
-            ]}
+            style={[styles.primaryButton, styles.formButton]}
             onPress={handleContinue}
-            disabled={loading}
           >
-            <Text style={styles.primaryButtonText}>
-              {loading ? "Creating Account..." : "Create Account"}
-            </Text>
-
-            {!loading && <Text style={styles.arrow}>→</Text>}
+            <Text style={styles.primaryButtonText}>Create Account</Text>
+            <Text style={styles.arrow}>→</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

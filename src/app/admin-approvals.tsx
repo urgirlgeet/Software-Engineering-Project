@@ -12,13 +12,13 @@ import { supabase } from "../lib/supabase";
 
 type User = {
   id: string;
+  request_id: string;
   name: string;
   email: string;
   phone: string;
-  apartment_number: string | null;
-  employee_id: string | null;
   role: string;
-  approval_status: string;
+  status: string;
+  requested_at: string;
 };
 
 export default function AdminApprovals() {
@@ -53,23 +53,50 @@ export default function AdminApprovals() {
         return;
       }
 
-      // Get residents, security and maintenance users
-      // belonging to this admin's society
-      const { data, error } = await supabase
-        .from("users")
-        .select(
-          "id, name, email, phone, apartment_number, employee_id, role, approval_status",
-        )
+      const { data: requests, error } = await supabase
+        .from("society_admin_requests")
+        .select("id, user_id, status, requested_at")
         .eq("society_id", admin.society_id)
-        .in("role", ["resident", "security", "maintenance"])
-        .order("approval_status", { ascending: true });
+        .order("requested_at", { ascending: false });
 
       if (error) {
         Alert.alert("Error", error.message);
         return;
       }
 
-      setUsers(data || []);
+      const userIds = (requests || []).map((request) => request.user_id);
+      if (userIds.length === 0) {
+        setUsers([]);
+        return;
+      }
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from("users")
+        .select("id, name, email, phone, role")
+        .in("id", userIds);
+
+      if (profilesError) {
+        Alert.alert("Error", profilesError.message);
+        return;
+      }
+
+      setUsers(
+        (requests || [])
+          .map((request) => {
+            const profile = (profiles || []).find(
+              (item) => item.id === request.user_id,
+            );
+            return profile
+              ? {
+                  ...profile,
+                  request_id: request.id,
+                  status: request.status,
+                  requested_at: request.requested_at,
+                }
+              : null;
+          })
+          .filter((user): user is User => user !== null),
+      );
     } finally {
       setLoading(false);
     }
@@ -80,8 +107,11 @@ export default function AdminApprovals() {
     status: "approved" | "rejected",
   ) => {
     const { error } = await supabase
-      .from("users")
-      .update({ approval_status: status })
+      .from("society_admin_requests")
+      .update({
+        status,
+        approved_at: status === "approved" ? new Date().toISOString() : null,
+      })
       .eq("id", userId);
 
     if (error) {
@@ -97,17 +127,11 @@ export default function AdminApprovals() {
     loadApprovals();
   };
 
-  const pendingUsers = users.filter(
-    (user) => user.approval_status === "pending",
-  );
+  const pendingUsers = users.filter((user) => user.status === "pending");
 
-  const activeUsers = users.filter(
-    (user) => user.approval_status === "approved",
-  );
+  const activeUsers = users.filter((user) => user.status === "approved");
 
-  const rejectedUsers = users.filter(
-    (user) => user.approval_status === "rejected",
-  );
+  const rejectedUsers = users.filter((user) => user.status === "rejected");
 
   const renderUser = (user: User, showActions: boolean) => (
     <View style={styles.userCard} key={user.id}>
@@ -120,30 +144,22 @@ export default function AdminApprovals() {
       <Text style={styles.userInfo}>{user.email}</Text>
       <Text style={styles.userInfo}>{user.phone}</Text>
 
-      {user.role === "resident" && user.apartment_number ? (
-        <Text style={styles.userInfo}>Apartment: {user.apartment_number}</Text>
-      ) : null}
-
-      {user.role !== "resident" && user.employee_id ? (
-        <Text style={styles.userInfo}>Employee ID: {user.employee_id}</Text>
-      ) : null}
-
       <View style={styles.statusContainer}>
-        <Text style={styles.statusText}>Status: {user.approval_status}</Text>
+        <Text style={styles.statusText}>Status: {user.status}</Text>
       </View>
 
       {showActions && (
         <View style={styles.actions}>
           <TouchableOpacity
             style={styles.approveButton}
-            onPress={() => updateApproval(user.id, "approved")}
+            onPress={() => updateApproval(user.request_id, "approved")}
           >
             <Text style={styles.actionText}>Approve</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.rejectButton}
-            onPress={() => updateApproval(user.id, "rejected")}
+            onPress={() => updateApproval(user.request_id, "rejected")}
           >
             <Text style={styles.actionText}>Reject</Text>
           </TouchableOpacity>
