@@ -1,18 +1,18 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SymbolView } from "expo-symbols";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
 import { supabase } from "../lib/supabase";
@@ -23,11 +23,22 @@ const priorities = ["low", "medium", "high"] as const;
 
 type RequestType = "complaint" | "maintenance";
 
+type ExistingRequest = {
+  category: string;
+  created_at: string;
+  description: string;
+  priority: string;
+  status: string;
+  title: string;
+  updated_at: string | null;
+};
+
 export default function Request() {
   const router = useRouter();
 
-  const { type } = useLocalSearchParams<{
+  const { type, id } = useLocalSearchParams<{
     type?: RequestType;
+    id?: string;
   }>();
 
   const requestType: RequestType =
@@ -40,6 +51,37 @@ export default function Request() {
   const [priority, setPriority] = useState<(typeof priorities)[number]>("low");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [existingRequest, setExistingRequest] =
+    useState<ExistingRequest | null>(null);
+  const [loadingRequest, setLoadingRequest] = useState(Boolean(id));
+
+  useEffect(() => {
+    if (!id) return;
+
+    const loadRequest = async () => {
+      const table = isMaintenance ? "maintenance_requests" : "complaints";
+      const { data, error } = await supabase
+        .from(table)
+        .select(
+          "title, category, priority, status, description, created_at, updated_at",
+        )
+        .eq("id", id)
+        .single();
+
+      if (error || !data) {
+        Alert.alert(
+          "Unable to load request",
+          "This request could not be found.",
+          [{ text: "Back", onPress: () => router.back() }],
+        );
+      } else {
+        setExistingRequest(data);
+      }
+      setLoadingRequest(false);
+    };
+
+    loadRequest();
+  }, [id, isMaintenance]);
 
   const handleSubmit = async () => {
     if (!title.trim() || !category || !description.trim()) {
@@ -119,6 +161,30 @@ export default function Request() {
       setSubmitting(false);
     }
   };
+
+  if (id) {
+    if (loadingRequest) {
+      return (
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.statusLoading}>
+            <Text style={styles.statusLoadingText}>
+              Loading request status...
+            </Text>
+          </View>
+        </SafeAreaView>
+      );
+    }
+
+    if (existingRequest) {
+      return (
+        <RequestStatus
+          request={existingRequest}
+          isMaintenance={isMaintenance}
+          onBack={() => router.back()}
+        />
+      );
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -366,6 +432,76 @@ export default function Request() {
   );
 }
 
+function RequestStatus({
+  request,
+  isMaintenance,
+  onBack,
+}: {
+  request: ExistingRequest;
+  isMaintenance: boolean;
+  onBack: () => void;
+}) {
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      <ScrollView contentContainerStyle={styles.statusContainer}>
+        <View style={styles.statusHeader}>
+          <Pressable onPress={onBack} style={styles.backButton}>
+            <Text style={styles.backArrow}>←</Text>
+          </Pressable>
+          <View style={styles.headerCopy}>
+            <Text style={styles.title}>
+              {isMaintenance ? "Maintenance Status" : "Complaint Status"}
+            </Text>
+            <Text style={styles.subtitle}>ESTATE REGISTRY • FLAT 402</Text>
+          </View>
+        </View>
+
+        <View style={styles.statusCard}>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusBadgeText}>
+              {request.status.toUpperCase()}
+            </Text>
+          </View>
+          <Text style={styles.statusTitle}>{request.title}</Text>
+          <Text style={styles.statusDescription}>{request.description}</Text>
+
+          <StatusRow label="Category" value={request.category} />
+          <StatusRow label="Priority" value={request.priority} />
+          <StatusRow
+            label="Submitted"
+            value={new Date(request.created_at).toLocaleString()}
+          />
+          {request.updated_at && (
+            <StatusRow
+              label="Last Updated"
+              value={new Date(request.updated_at).toLocaleString()}
+            />
+          )}
+        </View>
+
+        <View style={styles.statusNotice}>
+          <Text style={styles.statusNoticeTitle}>Request tracking</Text>
+          <Text style={styles.statusNoticeText}>
+            Your {isMaintenance ? "maintenance request" : "complaint"} is saved
+            in the society records. The status shown here updates when the
+            society team takes action.
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function StatusRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.statusRow}>
+      <Text style={styles.statusRowLabel}>{label}</Text>
+      <Text style={styles.statusRowValue}>{value}</Text>
+    </View>
+  );
+}
+
 const colors = {
   background: "#FFF9F7",
   brown: "#AE6039",
@@ -381,6 +517,110 @@ const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: colors.background,
     flex: 1,
+  },
+
+  statusLoading: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+  },
+
+  statusLoadingText: {
+    color: colors.brown,
+    fontSize: 17,
+  },
+
+  statusContainer: {
+    paddingBottom: 40,
+    paddingHorizontal: 28,
+    paddingTop: 25,
+  },
+
+  statusHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    marginBottom: 35,
+  },
+
+  statusCard: {
+    backgroundColor: colors.peach,
+    borderColor: colors.brown,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    padding: 25,
+  },
+
+  statusBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.peachStrong,
+    borderRadius: 16,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+  },
+
+  statusBadgeText: {
+    color: colors.darkBrown,
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.8,
+  },
+
+  statusTitle: {
+    color: colors.darkBrown,
+    fontFamily: "Georgia",
+    fontSize: 27,
+    fontWeight: "700",
+    marginTop: 22,
+  },
+
+  statusDescription: {
+    color: colors.muted,
+    fontSize: 17,
+    lineHeight: 27,
+    marginTop: 14,
+  },
+
+  statusRow: {
+    borderTopColor: "#E3C8B9",
+    borderTopWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 22,
+    paddingTop: 15,
+  },
+
+  statusRowLabel: {
+    color: colors.muted,
+    fontSize: 15,
+  },
+
+  statusRowValue: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+    marginLeft: 15,
+    textAlign: "right",
+  },
+
+  statusNotice: {
+    backgroundColor: colors.peachStrong,
+    borderRadius: 13,
+    marginTop: 20,
+    padding: 18,
+  },
+
+  statusNoticeTitle: {
+    color: colors.darkBrown,
+    fontSize: 17,
+    fontWeight: "600",
+  },
+
+  statusNoticeText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 7,
   },
 
   container: {
