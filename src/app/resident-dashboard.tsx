@@ -58,7 +58,7 @@ export default function ResidentDashboard() {
 
       const { data: userProfile, error: profileError } = await supabase
         .from("users")
-        .select("id, name, apartment_number, society_id, role")
+        .select("id, name, apartment_id, society_id, role")
         .eq("auth_user_id", user.id)
         .single();
 
@@ -73,9 +73,20 @@ export default function ResidentDashboard() {
         return;
       }
 
+      let apartmentNumber = "";
+      if (userProfile.apartment_id) {
+        const { data: apartment } = await supabase
+          .from("apartments")
+          .select("flat_number, block, floor")
+          .eq("id", userProfile.apartment_id)
+          .single();
+
+        apartmentNumber = apartment?.flat_number || "";
+      }
+
       setProfile({
         name: userProfile.name,
-        apartment_number: userProfile.apartment_number,
+        apartment_number: apartmentNumber,
         society_id: userProfile.society_id,
       });
 
