@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SymbolView } from "expo-symbols";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Alert,
     ScrollView,
@@ -10,15 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-
-const societies = [
-  "Omaxe Royal Residency",
-  "Palm Heights",
-  "Sunrise Apartments",
-  "Maple Residency",
-  "Centra Greens",
-  "Golflink Society",
-];
+import { supabase } from "../lib/supabase";
 
 export default function Society() {
   const router = useRouter();
@@ -31,6 +23,24 @@ export default function Society() {
   }>();
 
   const [selectedSociety, setSelectedSociety] = useState("");
+  const [societies, setSocieties] = useState<string[]>([]);
+  const [loadingSocieties, setLoadingSocieties] = useState(true);
+
+  useEffect(() => {
+    const loadSocieties = async () => {
+      const { data, error } = await supabase
+        .from("societies")
+        .select("name")
+        .order("name");
+
+      if (!error && data) {
+        setSocieties(data.map((item) => item.name));
+      }
+      setLoadingSocieties(false);
+    };
+
+    loadSocieties();
+  }, []);
 
   const handleContinue = () => {
     if (!selectedSociety) {
@@ -93,6 +103,18 @@ export default function Society() {
         </View>
 
         <Text style={styles.label}>Community Registry</Text>
+
+        {loadingSocieties && (
+          <Text style={styles.loadingText}>
+            Loading registered societies...
+          </Text>
+        )}
+
+        {!loadingSocieties && societies.length === 0 && (
+          <Text style={styles.loadingText}>
+            No registered societies are available yet.
+          </Text>
+        )}
 
         {societies.map((society) => (
           <TouchableOpacity
@@ -328,6 +350,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 17,
     marginTop: 13,
+    textAlign: "center",
+  },
+
+  loadingText: {
+    color: colors.muted,
+    fontSize: 15,
+    marginBottom: 12,
     textAlign: "center",
   },
 });

@@ -1,6 +1,8 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
+
+import { colors, styles } from "../styles/theme";
 
 const roles = [
   {
@@ -58,168 +60,98 @@ export default function Role() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.safeArea}>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backText}>‹ Back</Text>
       </TouchableOpacity>
 
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Choose Your Role</Text>
-          <Text style={styles.subtitle}>
+      <View style={styles.authContent}>
+        <View style={styles.authHeader}>
+          <View style={styles.logoTile}>
+            <Text style={styles.logoText}>G</Text>
+          </View>
+
+          <Text style={styles.eyebrow}>GATED LIVING SANCTUARY</Text>
+
+          <Text style={styles.pageTitle}>Choose Your Role</Text>
+
+          <Text style={styles.pageSubtitle}>
             Select how you are associated with your society
           </Text>
         </View>
 
         <View style={styles.form}>
-          {roles.map((role) => (
-            <TouchableOpacity
-              key={role.id}
-              style={[
-                styles.roleOption,
-                selectedRole === role.id && styles.selectedOption,
-              ]}
-              onPress={() => setSelectedRole(role.id)}
-            >
-              <View style={styles.roleContent}>
-                <Text
-                  style={[
-                    styles.roleTitle,
-                    selectedRole === role.id && styles.selectedText,
-                  ]}
-                >
-                  {role.title}
-                </Text>
+          <Text style={styles.sectionTitle}>Your Association</Text>
 
-                <Text style={styles.roleDescription}>{role.description}</Text>
-              </View>
+          {roles.map((role) => {
+            const isSelected = selectedRole === role.id;
 
-              {selectedRole === role.id && (
-                <Text style={styles.checkmark}>✓</Text>
-              )}
-            </TouchableOpacity>
-          ))}
+            return (
+              <TouchableOpacity
+                key={role.id}
+                style={[
+                  styles.inputWithIcon,
+                  {
+                    minHeight: 72,
+                    marginBottom: 12,
+                    borderWidth: 1,
+                    borderColor: isSelected ? colors.brown : colors.softCopper,
+                    backgroundColor: isSelected
+                      ? colors.selected
+                      : colors.peach,
+                    paddingHorizontal: 16,
+                  },
+                ]}
+                onPress={() => setSelectedRole(role.id)}
+                activeOpacity={0.8}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: isSelected ? colors.brown : colors.ink,
+                      fontSize: 16,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {role.title}
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: colors.muted,
+                      fontSize: 14,
+                      marginTop: 4,
+                    }}
+                  >
+                    {role.description}
+                  </Text>
+                </View>
+
+                {isSelected && (
+                  <Text
+                    style={{
+                      color: colors.brown,
+                      fontSize: 22,
+                      fontWeight: "700",
+                    }}
+                  >
+                    ✓
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
 
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.primaryButton, styles.formButton]}
             onPress={handleContinue}
           >
-            <Text style={styles.continueText}>Continue</Text>
+            <Text style={styles.primaryButtonText}>Continue</Text>
+
+            <Text style={styles.arrow}>→</Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
-    paddingTop: 60,
-  },
-
-  backButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 8,
-    paddingRight: 15,
-  },
-
-  backText: {
-    color: "#6B3E2E",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingBottom: 50,
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: 35,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#6B3E2E",
-    textAlign: "center",
-  },
-
-  subtitle: {
-    fontSize: 15,
-    letterSpacing: 0.5,
-    color: "#A65D3B",
-    marginTop: 8,
-    textAlign: "center",
-  },
-
-  form: {
-    width: "100%",
-  },
-
-  roleOption: {
-    minHeight: 78,
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 14,
-    backgroundColor: "#FFF8ED",
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    marginBottom: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  selectedOption: {
-    borderColor: "#A65D3B",
-    backgroundColor: "#F8E4D3",
-  },
-
-  roleContent: {
-    flex: 1,
-  },
-
-  roleTitle: {
-    color: "#4E3025",
-    fontSize: 17,
-    fontWeight: "700",
-    marginBottom: 5,
-  },
-
-  selectedText: {
-    color: "#6B3E2E",
-  },
-
-  roleDescription: {
-    color: "#8A6657",
-    fontSize: 14,
-  },
-
-  checkmark: {
-    color: "#A65D3B",
-    fontSize: 20,
-    fontWeight: "700",
-    marginLeft: 10,
-  },
-
-  continueButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 16,
-  },
-
-  continueText: {
-    color: "#FFF8ED",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-});
