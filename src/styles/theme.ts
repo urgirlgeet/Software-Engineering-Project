@@ -1,18 +1,19 @@
 // src/styles/theme.ts
 
 import { StyleSheet } from "react-native";
+import { colors as palette } from "./colors";
 
 export const colors = {
-  background: "#FFF9F7",
-  ink: "#1F0D08",
-  brown: "#7E4022",
+  background: palette.background,
+  ink: palette.text,
+  brown: palette.primary,
   copper: "#AE6039",
-  softCopper: "#FFDCD0",
-  peach: "#FFF0EB",
-  peachStrong: "#FFE0D5",
-  muted: "#6D5B55",
-  white: "#FFFFFF",
-  placeholder: "#6D5952",
+  softCopper: palette.peachStrong,
+  peach: palette.input,
+  peachStrong: palette.peachStrong,
+  muted: palette.textSecondary,
+  white: palette.white,
+  placeholder: palette.textMuted,
   selected: "#FFE4DB",
   shadow: "#6F3D2A",
   error: "#8B0000",
@@ -51,6 +52,8 @@ export const styles = StyleSheet.create({
 
   card: {
     backgroundColor: colors.white,
+    borderColor: colors.softCopper,
+    borderWidth: 1,
     borderRadius: 18,
     paddingHorizontal: 20,
     paddingVertical: 20,
@@ -109,6 +112,35 @@ export const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  inlineError: {
+    color: colors.error,
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 15,
+    textAlign: "center",
+  },
+
+  errorIcon: {
+    alignItems: "center",
+    backgroundColor: "#FFE1E0",
+    borderRadius: 24,
+    height: 48,
+    justifyContent: "center",
+    marginTop: 24,
+    width: 48,
+  },
+
+  signupAction: {
+    alignSelf: "stretch",
+    marginTop: 24,
+  },
+
+  signupSecondaryAction: {
+    alignItems: "center",
+    marginTop: 18,
+    padding: 10,
+  },
+
   label: {
     color: colors.ink,
     fontSize: 15,
@@ -128,9 +160,6 @@ export const styles = StyleSheet.create({
   disabled: {
     opacity: 0.6,
   },
-
-  // ADD THESE STYLES INSIDE src/styles/theme.ts
-  // Put them before the "// Pending approval" section.
 
   featureCard: {
     alignItems: "center",
@@ -274,12 +303,6 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
 
-  arrow: {
-    color: colors.white,
-    fontSize: 24,
-    marginLeft: 10,
-  },
-
   pressed: {
     opacity: 0.75,
   },
@@ -331,6 +354,8 @@ export const styles = StyleSheet.create({
   inputWithIcon: {
     alignItems: "center",
     backgroundColor: colors.peach,
+    borderColor: colors.softCopper,
+    borderWidth: 1,
     borderRadius: 10,
     flexDirection: "row",
     height: 48,
@@ -342,6 +367,74 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     height: 48,
+    marginLeft: 10,
+  },
+
+  societySummary: {
+    backgroundColor: colors.peach,
+    borderRadius: 10,
+    marginBottom: 18,
+    padding: 14,
+  },
+
+  societySummaryLabel: {
+    color: colors.muted,
+    fontSize: 12,
+  },
+
+  societySummaryName: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+
+  roleOption: {
+    alignItems: "center",
+    backgroundColor: colors.white,
+    borderColor: colors.softCopper,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    marginBottom: 12,
+    minHeight: 76,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+
+  roleOptionSelected: {
+    backgroundColor: colors.selected,
+    borderColor: colors.brown,
+  },
+
+  roleIcon: {
+    alignItems: "center",
+    backgroundColor: colors.peach,
+    borderRadius: 12,
+    height: 42,
+    justifyContent: "center",
+    marginRight: 13,
+    width: 42,
+  },
+
+  roleCopy: {
+    flex: 1,
+  },
+
+  roleTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  roleDescription: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+
+  roleOptionCheck: {
     marginLeft: 10,
   },
 
@@ -362,12 +455,6 @@ export const styles = StyleSheet.create({
     paddingRight: 15,
   },
 
-  backText: {
-    color: colors.brown,
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
   authContent: {
     flex: 1,
     justifyContent: "center",
@@ -377,13 +464,6 @@ export const styles = StyleSheet.create({
   authHeader: {
     alignItems: "center",
     marginBottom: 35,
-  },
-
-  logoText: {
-    color: colors.brown,
-    fontFamily: "Georgia",
-    fontSize: 26,
-    fontWeight: "700",
   },
 
   form: {

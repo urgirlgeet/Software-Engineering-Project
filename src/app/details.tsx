@@ -1,27 +1,28 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { colors, styles } from "../styles/theme";
+import BrandMark from "../components/BrandMark";
+import BackButton from "../components/BackButton";
 
 export default function Details() {
   const router = useRouter();
 
-  const { name, phone, email, password, society, role } = useLocalSearchParams<{
-    name: string;
-    phone: string;
-    email: string;
-    password: string;
+  const { society, societyId, role } = useLocalSearchParams<{
     society: string;
+    societyId: string;
     role: string;
   }>();
 
@@ -78,11 +79,8 @@ export default function Details() {
     router.push({
       pathname: "/complete-signup",
       params: {
-        name,
-        phone,
-        email,
-        password,
         society,
+        societyId,
         role,
         apartment: role === "resident" ? apartment.trim() : "",
         employeeId: role !== "resident" ? employeeId.trim() : "",
@@ -101,17 +99,12 @@ export default function Details() {
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backText}>‹ Back</Text>
-        </TouchableOpacity>
+        <StatusBar style="dark" />
+
+        <BackButton onPress={() => router.back()} style={styles.backButton} />
 
         <View style={styles.authHeader}>
-          <View style={styles.logoTile}>
-            <Text style={styles.logoText}>G</Text>
-          </View>
+          <BrandMark />
 
           <Text style={styles.eyebrow}>GATED LIVING SANCTUARY</Text>
 
@@ -121,38 +114,39 @@ export default function Details() {
         </View>
 
         <View style={styles.form}>
-          <View
-            style={[
-              styles.inputWithIcon,
-              {
-                justifyContent: "center",
-                marginBottom: 18,
-              },
-            ]}
-          >
-            <Text
-              style={{
-                color: colors.brown,
-                fontSize: 14,
-                fontWeight: "600",
-              }}
-            >
-              {society}
-            </Text>
+          <View style={styles.societySummary}>
+            <View style={styles.sectionHeading}>
+              <SymbolView
+                name={{ ios: "building.2", android: "business", web: "business" }}
+                tintColor={colors.brown}
+                size={20}
+              />
+              <View style={{ marginLeft: 10 }}>
+                <Text style={styles.societySummaryLabel}>Selected community</Text>
+                <Text style={styles.societySummaryName}>{society}</Text>
+              </View>
+            </View>
           </View>
 
           {role === "resident" && (
             <>
-              <Text style={styles.label}>Apartment Number</Text>
+              <Text style={styles.label}>Apartment</Text>
 
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. A-204"
-                placeholderTextColor={colors.placeholder}
-                value={apartment}
-                onChangeText={setApartment}
-                autoCapitalize="characters"
-              />
+              <View style={styles.inputWithIcon}>
+                <SymbolView
+                  name={{ ios: "door.left.hand.open", android: "door_front", web: "door_front" }}
+                  tintColor={colors.muted}
+                  size={20}
+                />
+                <TextInput
+                  style={styles.iconInput}
+                  placeholder="e.g. A-101"
+                  placeholderTextColor={colors.placeholder}
+                  value={apartment}
+                  onChangeText={setApartment}
+                  autoCapitalize="characters"
+                />
+              </View>
             </>
           )}
 
@@ -162,14 +156,21 @@ export default function Details() {
             <>
               <Text style={styles.label}>Employee ID</Text>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your employee ID"
-                placeholderTextColor={colors.placeholder}
-                value={employeeId}
-                onChangeText={setEmployeeId}
-                autoCapitalize="characters"
-              />
+              <View style={styles.inputWithIcon}>
+                <SymbolView
+                  name={{ ios: "person.text.rectangle", android: "badge", web: "badge" }}
+                  tintColor={colors.muted}
+                  size={20}
+                />
+                <TextInput
+                  style={styles.iconInput}
+                  placeholder="Enter your employee ID"
+                  placeholderTextColor={colors.placeholder}
+                  value={employeeId}
+                  onChangeText={setEmployeeId}
+                  autoCapitalize="characters"
+                />
+              </View>
             </>
           )}
 
@@ -178,7 +179,11 @@ export default function Details() {
             onPress={handleContinue}
           >
             <Text style={styles.primaryButtonText}>Create Account</Text>
-            <Text style={styles.arrow}>→</Text>
+            <SymbolView
+              name={{ ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" }}
+              tintColor={colors.white}
+              size={20}
+            />
           </TouchableOpacity>
         </View>
       </ScrollView>

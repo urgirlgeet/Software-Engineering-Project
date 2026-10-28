@@ -25,6 +25,18 @@ function FeatureCard({ icon, title, detail }: FeatureCardProps) {
                 : icon === "home"
                   ? "house"
                   : "checkmark.shield",
+            android:
+              icon === "person_key"
+                ? "vpn_key"
+                : icon === "home"
+                  ? "home"
+                  : "verified_user",
+            web:
+              icon === "person_key"
+                ? "vpn_key"
+                : icon === "home"
+                  ? "home"
+                  : "verified_user",
           }}
           tintColor={colors.brown}
           size={28}
@@ -57,7 +69,7 @@ export default function Index() {
                   android: "door_open",
                   web: "door_open",
                 }}
-                tintColor="#FBE5D6"
+                tintColor={colors.peachStrong}
                 size={72}
               />
             </View>
@@ -129,7 +141,11 @@ export default function Index() {
           >
             <Text style={styles.primaryButtonText}>Sign In</Text>
 
-            <Text style={styles.arrow}>→</Text>
+            <SymbolView
+              name={{ ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" }}
+              tintColor={colors.white}
+              size={20}
+            />
           </Pressable>
 
           <Pressable
@@ -140,7 +156,7 @@ export default function Index() {
             onPress={() => router.push("/signup")}
           >
             <Text style={styles.secondaryButtonText}>
-              Request Society Access
+              Create an Account
             </Text>
           </Pressable>
         </View>

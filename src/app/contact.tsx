@@ -1,16 +1,22 @@
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import {
     Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+
+import { colors } from "../styles/theme";
+import { contactStyles as styles } from "../styles/screens/contact";
+import BrandMark from "../components/BrandMark";
+import BackButton from "../components/BackButton";
 
 export default function Contact() {
   const router = useRouter();
@@ -49,55 +55,74 @@ export default function Contact() {
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backText}>‹ Back</Text>
-        </TouchableOpacity>
+        <StatusBar style="dark" />
+
+        <BackButton onPress={() => router.back()} style={styles.backButton} />
 
         <View style={styles.header}>
+          <BrandMark />
           <Text style={styles.title}>Contact Us</Text>
           <Text style={styles.subtitle}>Tell us about your society</Text>
         </View>
 
         <View style={styles.form}>
           <Text style={styles.label}>Full Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your full name"
-            placeholderTextColor="#A98F82"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
+          <View style={styles.inputWithIcon}>
+            <SymbolView
+              name={{ ios: "person", android: "person", web: "person" }}
+              tintColor={colors.muted}
+              size={20}
+            />
+            <TextInput
+              style={styles.iconInput}
+              placeholder="Enter your full name"
+              placeholderTextColor={colors.placeholder}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
 
           <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#A98F82"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          <View style={styles.inputWithIcon}>
+            <SymbolView
+              name={{ ios: "envelope", android: "mail", web: "mail" }}
+              tintColor={colors.muted}
+              size={20}
+            />
+            <TextInput
+              style={styles.iconInput}
+              placeholder="Enter your email"
+              placeholderTextColor={colors.placeholder}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
 
           <Text style={styles.label}>Society Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your society name"
-            placeholderTextColor="#A98F82"
-            value={society}
-            onChangeText={setSociety}
-          />
+          <View style={styles.inputWithIcon}>
+            <SymbolView
+              name={{ ios: "building.2", android: "business", web: "business" }}
+              tintColor={colors.muted}
+              size={20}
+            />
+            <TextInput
+              style={styles.iconInput}
+              placeholder="Enter your society name"
+              placeholderTextColor={colors.placeholder}
+              value={society}
+              onChangeText={setSociety}
+            />
+          </View>
 
           <Text style={styles.label}>Message</Text>
           <TextInput
             style={[styles.input, styles.messageInput]}
             placeholder="Tell us about your society"
-            placeholderTextColor="#A98F82"
+            placeholderTextColor={colors.placeholder}
             value={message}
             onChangeText={setMessage}
             multiline
@@ -112,93 +137,3 @@ export default function Contact() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  keyboardContainer: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-  },
-
-  container: {
-    flexGrow: 1,
-    backgroundColor: "#F3E8D3",
-    paddingHorizontal: 28,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-
-  backButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 8,
-    paddingRight: 15,
-    marginBottom: 25,
-  },
-
-  backText: {
-    color: "#6B3E2E",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-
-  header: {
-    alignItems: "center",
-    marginBottom: 30,
-  },
-
-  title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#6B3E2E",
-  },
-
-  subtitle: {
-    fontSize: 15,
-    letterSpacing: 0.5,
-    color: "#A65D3B",
-    marginTop: 7,
-    textAlign: "center",
-  },
-
-  form: {
-    width: "100%",
-  },
-
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#6B3E2E",
-    marginBottom: 7,
-    marginTop: 12,
-  },
-
-  input: {
-    minHeight: 52,
-    borderWidth: 1.5,
-    borderColor: "#C89B7B",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    backgroundColor: "#FFF8ED",
-    color: "#4E3025",
-    fontSize: 16,
-  },
-
-  messageInput: {
-    minHeight: 120,
-    paddingTop: 15,
-  },
-
-  submitButton: {
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: "#A65D3B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 28,
-  },
-
-  submitText: {
-    color: "#FFF8ED",
-    fontSize: 17,
-    fontWeight: "600",
-  },
-});

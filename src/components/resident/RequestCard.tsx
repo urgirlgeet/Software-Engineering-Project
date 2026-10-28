@@ -1,6 +1,10 @@
+import { SymbolView } from "expo-symbols";
 import { Pressable, Text, View } from "react-native";
 
-import { dashboardStyles } from "../../styles/dashboardStyles";
+import {
+  dashboardColors,
+  dashboardStyles,
+} from "../../styles/dashboardStyles";
 
 export type RequestItem = {
   id: string;
@@ -50,7 +54,18 @@ export default function RequestCard({ item, onPress }: RequestCardProps) {
       <View style={dashboardStyles.requestFooter}>
         <Text style={dashboardStyles.statusText}>Status: {status}</Text>
 
-        <Text style={dashboardStyles.requestAction}>View details →</Text>
+        <View style={dashboardStyles.actionInline}>
+          <Text style={dashboardStyles.requestAction}>View details</Text>
+          <SymbolView
+            name={{
+              ios: "arrow.right",
+              android: "arrow_forward",
+              web: "arrow_forward",
+            }}
+            tintColor={dashboardColors.brown}
+            size={15}
+          />
+        </View>
       </View>
     </Pressable>
   );

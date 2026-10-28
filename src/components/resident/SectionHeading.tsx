@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { styles } from "../../styles/theme";
+import { dashboardStyles as styles } from "../../styles/dashboardStyles";
 
 type Props = {
   title: string;

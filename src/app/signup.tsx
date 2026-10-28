@@ -16,6 +16,8 @@ import {
 } from "react-native";
 
 import { colors, styles } from "../styles/theme";
+import BrandMark from "../components/BrandMark";
+import { saveSignupDraft } from "../lib/signupDraft";
 
 export default function SignUp() {
   const router = useRouter();
@@ -27,8 +29,29 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleNext = () => {
-    if (!name || !phone || !email || !password || !confirmPassword) {
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedEmail = email.trim();
+
+    if (
+      !trimmedName ||
+      !trimmedPhone ||
+      !trimmedEmail ||
+      !password ||
+      !confirmPassword
+    ) {
       Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      Alert.alert("Invalid email", "Enter a valid email address.");
+      return;
+    }
+
+    const phoneDigits = trimmedPhone.replace(/\D/g, "");
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+      Alert.alert("Invalid phone number", "Enter a valid contact number.");
       return;
     }
 
@@ -42,15 +65,13 @@ export default function SignUp() {
       return;
     }
 
-    router.push({
-      pathname: "/society",
-      params: {
-        name: name.trim(),
-        phone: phone.trim(),
-        email: email.trim(),
-        password,
-      },
+    saveSignupDraft({
+      name: trimmedName,
+      phone: trimmedPhone,
+      email: trimmedEmail,
+      password,
     });
+    router.push("/society");
   };
 
   return (
@@ -66,17 +87,7 @@ export default function SignUp() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.formHeader}>
-          <View style={styles.logoTile}>
-            <SymbolView
-              name={{
-                ios: "door.left.hand.open",
-                android: "door_open",
-                web: "door_open",
-              }}
-              tintColor={colors.brown}
-              size={32}
-            />
-          </View>
+          <BrandMark />
 
           <Text style={styles.eyebrow}>GATED</Text>
 
@@ -104,14 +115,21 @@ export default function SignUp() {
 
           <Text style={styles.label}>Full Name</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your full name"
-            placeholderTextColor={colors.placeholder}
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
+          <View style={styles.inputWithIcon}>
+            <SymbolView
+              name={{ ios: "person", android: "person", web: "person" }}
+              tintColor={colors.muted}
+              size={20}
+            />
+            <TextInput
+              style={styles.iconInput}
+              placeholder="Enter your full name"
+              placeholderTextColor={colors.placeholder}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
 
           <Text style={styles.label}>Mobile Contact</Text>
 
@@ -163,25 +181,43 @@ export default function SignUp() {
 
           <Text style={styles.label}>Password</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor={colors.ink}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.inputWithIcon}>
+            <SymbolView
+              name={{ ios: "lock", android: "lock", web: "lock" }}
+              tintColor={colors.muted}
+              size={20}
+            />
+            <TextInput
+              style={styles.iconInput}
+              placeholder="Enter your password"
+              placeholderTextColor={colors.placeholder}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
 
           <Text style={styles.label}>Confirm Password</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm your password"
-            placeholderTextColor={colors.ink}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
+          <View style={styles.inputWithIcon}>
+            <SymbolView
+              name={{
+                ios: "lock.shield",
+                android: "verified_user",
+                web: "verified_user",
+              }}
+              tintColor={colors.muted}
+              size={20}
+            />
+            <TextInput
+              style={styles.iconInput}
+              placeholder="Confirm your password"
+              placeholderTextColor={colors.placeholder}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+            />
+          </View>
         </View>
 
         <TouchableOpacity
@@ -190,7 +226,11 @@ export default function SignUp() {
         >
           <Text style={styles.primaryButtonText}>Create Account</Text>
 
-          <Text style={styles.arrow}>→</Text>
+          <SymbolView
+            name={{ ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" }}
+            tintColor={colors.white}
+            size={20}
+          />
         </TouchableOpacity>
 
         <Text style={styles.terms}>

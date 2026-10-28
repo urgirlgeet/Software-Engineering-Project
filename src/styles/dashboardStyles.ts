@@ -1,20 +1,21 @@
 import { StyleSheet } from "react-native";
+import { colors } from "./colors";
 
 export const dashboardColors = {
-  background: "#FFF9F7",
-  brown: "#91441F",
-  ink: "#24100A",
-  muted: "#705E58",
-  peach: "#FFF0EB",
-  peachStrong: "#FFE1D7",
-  white: "#FFFFFF",
-  green: "#DFF3D9",
+  background: colors.background,
+  brown: colors.primary,
+  ink: colors.text,
+  muted: colors.textSecondary,
+  peach: colors.input,
+  peachStrong: colors.peachStrong,
+  white: colors.white,
+  green: colors.successSurface,
   greenText: "#28742D",
-  red: "#FFE1E0",
+  red: colors.errorSurface,
   redText: "#C53B3B",
-  yellow: "#FFF1BE",
+  yellow: colors.warningSurface,
   yellowText: "#9A6A00",
-  border: "#F3E4DF",
+  border: colors.border,
 };
 
 export const dashboardStyles = StyleSheet.create({
@@ -36,8 +37,8 @@ export const dashboardStyles = StyleSheet.create({
   },
 
   container: {
-    paddingHorizontal: 15,
-    paddingTop: 12,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 84,
   },
 
@@ -78,7 +79,9 @@ export const dashboardStyles = StyleSheet.create({
 
   profileBanner: {
     backgroundColor: dashboardColors.peach,
-    borderRadius: 12,
+    borderColor: dashboardColors.border,
+    borderRadius: 16,
+    borderWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     minHeight: 113,
@@ -174,17 +177,20 @@ export const dashboardStyles = StyleSheet.create({
   },
 
   actionGrid: {
+    justifyContent: "space-between",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    rowGap: 10,
   },
 
   actionCard: {
     backgroundColor: dashboardColors.white,
-    borderRadius: 11,
+    borderColor: dashboardColors.border,
+    borderRadius: 16,
+    borderWidth: 1,
     minHeight: 116,
     padding: 14,
-    width: "48.5%",
+    width: "48%",
     shadowColor: dashboardColors.brown,
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -218,7 +224,9 @@ export const dashboardStyles = StyleSheet.create({
 
   requestCard: {
     backgroundColor: dashboardColors.white,
-    borderRadius: 11,
+    borderColor: dashboardColors.border,
+    borderRadius: 15,
+    borderWidth: 1,
     marginBottom: 11,
     padding: 14,
   },
@@ -239,14 +247,11 @@ export const dashboardStyles = StyleSheet.create({
     marginLeft: 9,
   },
 
-  requestShortcutArrow: {
-    color: dashboardColors.brown,
-    fontSize: 20,
-  },
-
   bookingCard: {
     backgroundColor: dashboardColors.white,
-    borderRadius: 11,
+    borderColor: dashboardColors.border,
+    borderRadius: 15,
+    borderWidth: 1,
     marginBottom: 11,
     padding: 14,
   },
@@ -289,7 +294,9 @@ export const dashboardStyles = StyleSheet.create({
 
   noticeCard: {
     backgroundColor: dashboardColors.white,
-    borderRadius: 11,
+    borderColor: dashboardColors.border,
+    borderRadius: 15,
+    borderWidth: 1,
     marginBottom: 12,
     overflow: "hidden",
     padding: 14,
@@ -308,11 +315,6 @@ export const dashboardStyles = StyleSheet.create({
     height: 36,
     justifyContent: "center",
     width: 36,
-  },
-
-  noticeIconText: {
-    color: dashboardColors.brown,
-    fontSize: 20,
   },
 
   noticeCopy: {
@@ -398,12 +400,20 @@ export const dashboardStyles = StyleSheet.create({
 
   statusText: {
     color: dashboardColors.muted,
-    fontSize: 10,
+    fontSize: 12,
+    lineHeight: 18,
   },
 
   requestAction: {
     color: dashboardColors.brown,
-    fontSize: 10,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+
+  actionInline: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
   },
 
   bottomNav: {

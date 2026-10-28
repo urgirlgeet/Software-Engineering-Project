@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Alert, Modal, Pressable, Text, TextInput, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Modal, Pressable, ScrollView, Text, View } from "react-native";
 
 import { supabase } from "../../lib/supabase";
 import { dashboardColors, dashboardStyles } from "../../styles/dashboardStyles";
@@ -12,6 +12,11 @@ type AssignComplaintModalProps = {
   onAssigned: () => void;
 };
 
+type MaintenanceStaff = {
+  id: string;
+  name: string;
+};
+
 export default function AssignComplaintModal({
   visible,
   complaintId,
@@ -21,10 +26,42 @@ export default function AssignComplaintModal({
 }: AssignComplaintModalProps) {
   const [employeeId, setEmployeeId] = useState("");
   const [assigning, setAssigning] = useState(false);
+  const [employees, setEmployees] = useState<MaintenanceStaff[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const loadEmployees = async () => {
+      setLoadingEmployees(true);
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id, name")
+          .eq("society_id", societyId)
+          .eq("role", "maintenance")
+          .order("name");
+
+        if (error) {
+          Alert.alert("Unable to load staff", error.message);
+          setEmployees([]);
+        } else {
+          setEmployees(data || []);
+        }
+      } catch {
+        Alert.alert("Unable to load staff", "Please try again.");
+        setEmployees([]);
+      } finally {
+        setLoadingEmployees(false);
+      }
+    };
+
+    loadEmployees();
+  }, [societyId, visible]);
 
   const assignComplaint = async () => {
-    if (!employeeId.trim()) {
-      Alert.alert("Required", "Enter the maintenance employee ID.");
+    if (!employeeId) {
+      Alert.alert("Required", "Select a maintenance employee.");
       return;
     }
 
@@ -35,36 +72,39 @@ export default function AssignComplaintModal({
     try {
       setAssigning(true);
 
-      const { data: employee, error: employeeError } = await supabase
-        .from("users")
-        .select("id, name")
-        .eq("id", employeeId.trim())
-        .eq("society_id", societyId)
-        .eq("role", "maintenance")
-        .single();
-
-      if (employeeError || !employee) {
+      const employee = employees.find((item) => item.id === employeeId);
+      if (!employee) {
         Alert.alert(
-          "Employee not found",
-          "No maintenance user with this ID was found in your society.",
+          "Employee unavailable",
+          "Select an available maintenance employee and try again.",
         );
         return;
       }
 
-      const { error: updateError } = await supabase
+      const { data, error: updateError } = await supabase
         .from("complaints")
         .update({
-          assigned_to: employee.id,
+          assigned_to: employeeId,
           status: "assigned",
+          updated_at: new Date().toISOString(),
         })
-        .eq("id", complaintId);
+        .eq("id", complaintId)
+        .eq("society_id", societyId)
+        .select("id")
+        .single();
 
-      if (updateError) {
-        Alert.alert("Error", updateError.message);
+      if (updateError || !data) {
+        Alert.alert(
+          "Unable to assign complaint",
+          updateError?.message || "The complaint was not updated.",
+        );
         return;
       }
 
-      Alert.alert("Complaint Assigned", `Assigned to ${employee.name}.`);
+      Alert.alert(
+        "Complaint Assigned",
+        `Assigned to ${employee?.name || "the selected employee"}.`,
+      );
 
       setEmployeeId("");
       onAssigned();
@@ -95,26 +135,43 @@ export default function AssignComplaintModal({
           <Text style={dashboardStyles.sectionTitle}>Assign Complaint</Text>
 
           <Text style={[dashboardStyles.statusText, { marginTop: 8 }]}>
-            Enter the maintenance user ID.
+            Choose a maintenance employee from your society.
           </Text>
 
-          <TextInput
-            value={employeeId}
-            onChangeText={setEmployeeId}
-            placeholder="Maintenance user ID"
-            placeholderTextColor={dashboardColors.muted}
-            autoCapitalize="none"
-            style={{
-              borderWidth: 1,
-              borderColor: dashboardColors.border,
-              borderRadius: 9,
-              paddingHorizontal: 12,
-              paddingVertical: 11,
-              marginTop: 16,
-              color: dashboardColors.ink,
-              backgroundColor: dashboardColors.peach,
-            }}
-          />
+          <ScrollView
+            style={{ maxHeight: 240, marginTop: 12 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {loadingEmployees ? (
+              <Text style={dashboardStyles.statusText}>Loading staff...</Text>
+            ) : employees.length === 0 ? (
+              <Text style={dashboardStyles.statusText}>
+                No maintenance employees are available in this society.
+              </Text>
+            ) : (
+              employees.map((employee) => (
+                <Pressable
+                  key={employee.id}
+                  onPress={() => setEmployeeId(employee.id)}
+                  style={{
+                    backgroundColor:
+                      employeeId === employee.id
+                        ? dashboardColors.peach
+                        : dashboardColors.white,
+                    borderColor: dashboardColors.border,
+                    borderRadius: 9,
+                    borderWidth: 1,
+                    marginTop: 8,
+                    padding: 12,
+                  }}
+                >
+                  <Text style={{ color: dashboardColors.ink }}>
+                    {employee.name}
+                  </Text>
+                </Pressable>
+              ))
+            )}
+          </ScrollView>
 
           <View
             style={{
@@ -138,7 +195,9 @@ export default function AssignComplaintModal({
 
             <Pressable
               onPress={assignComplaint}
-              disabled={assigning}
+              disabled={
+                assigning || loadingEmployees || employees.length === 0
+              }
               style={{
                 flex: 1,
                 padding: 12,

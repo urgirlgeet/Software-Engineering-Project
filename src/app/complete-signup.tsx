@@ -1,174 +1,244 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { SymbolView } from "expo-symbols";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+
+import BackButton from "../components/BackButton";
+import BrandMark from "../components/BrandMark";
+import { clearSignupDraft, getSignupDraft } from "../lib/signupDraft";
 import { supabase } from "../lib/supabase";
+import { colors, styles } from "../styles/theme";
+
+const signupRoles = ["resident", "admin", "security", "maintenance"] as const;
+type SignupRole = (typeof signupRoles)[number];
+
+function getSignupErrorMessage(message: string, code?: string) {
+  if (code === "PGRST202" || message.includes("lookup_signup_apartment")) {
+    return "The apartment verification function is missing from Supabase. Apply the signup migration in supabase/migrations, then retry.";
+  }
+
+  if (message.toLowerCase().includes("already registered")) {
+    return "An account with this email already exists. Sign in, or use a different email address.";
+  }
+
+  return message;
+}
 
 export default function CompleteSignup() {
   const router = useRouter();
+  const { societyId, role, apartment, employeeId } = useLocalSearchParams<{
+    societyId: string;
+    role: string;
+    apartment: string;
+    employeeId: string;
+  }>();
 
-  const { name, phone, email, password, society, role, apartment, employeeId } =
-    useLocalSearchParams<{
-      name: string;
-      phone: string;
-      email: string;
-      password: string;
-      society: string;
-      role: string;
-      apartment: string;
-      employeeId: string;
-    }>();
-
+  const started = useRef(false);
   const [error, setError] = useState("");
+  const [confirmationRequired, setConfirmationRequired] = useState(false);
 
   useEffect(() => {
-    createAccount();
+    if (started.current) return;
+    started.current = true;
+    void createAccount();
   }, []);
 
   const createAccount = async () => {
+    const draft = getSignupDraft();
+
+    if (
+      !draft ||
+      !societyId ||
+      !role ||
+      !signupRoles.includes(role as SignupRole)
+    ) {
+      setError("Your signup details expired. Please start again.");
+      return;
+    }
+
+    if (role === "resident" && !apartment?.trim()) {
+      setError("Enter your apartment number before creating your account.");
+      return;
+    }
+
+    if (role !== "resident" && !employeeId?.trim()) {
+      setError("Enter your employee ID before creating your account.");
+      return;
+    }
+
+    if (!draft.name.trim() || !draft.phone.trim() || !draft.email.trim()) {
+      setError("Some signup details are missing. Please start again.");
+      return;
+    }
+
+    const signupRole = role as SignupRole;
+    const signupMetadata = {
+      name: draft.name.trim(),
+      phone: draft.phone.trim(),
+      society_id: societyId,
+      role: signupRole,
+      ...(signupRole === "resident"
+        ? { apartment: apartment.trim() }
+        : { employee_id: employeeId.trim() }),
+    };
+
     try {
-      // 1. Create authentication account
+      if (signupRole === "resident") {
+        const { data: apartmentId, error: apartmentError } =
+          await supabase.rpc("lookup_signup_apartment", {
+            p_society_id: societyId,
+            p_flat_number: apartment.trim(),
+          });
+
+        if (apartmentError) {
+          setError(
+            getSignupErrorMessage(apartmentError.message, apartmentError.code),
+          );
+          return;
+        }
+
+        if (!apartmentId) {
+          setError(
+            "That apartment number was not found in this society, or it matches more than one apartment. Check the number with your society administrator.",
+          );
+          return;
+        }
+      }
+
       const { data, error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
+        email: draft.email.trim(),
+        password: draft.password,
+        options: { data: signupMetadata },
       });
 
       if (authError) {
-        setError(authError.message);
+        setError(getSignupErrorMessage(authError.message, authError.code));
+        clearSignupDraft();
         return;
       }
 
       if (!data.user) {
-        setError("Account could not be created.");
+        setError("Supabase did not return an account. Please try again.");
+        clearSignupDraft();
         return;
       }
 
-      // 2. Find society ID
-      const { data: societyData, error: societyError } = await supabase
-        .from("societies")
-        .select("id")
-        .eq("name", society)
-        .single();
+      clearSignupDraft();
 
-      if (societyError || !societyData) {
-        setError("Selected society could not be found.");
+      if (!data.session) {
+        setConfirmationRequired(true);
         return;
       }
 
-      let apartmentId: string | null = null;
-
-      if (role === "resident") {
-        const { data: apartmentData, error: apartmentError } = await supabase
-          .from("apartments")
-          .select("id")
-          .eq("society_id", societyData.id)
-          .eq("flat_number", apartment.trim())
-          .single();
-
-        if (apartmentError || !apartmentData) {
-          setError("Selected apartment could not be found in this society.");
-          return;
-        }
-
-        apartmentId = apartmentData.id;
-      }
-
-      // 3. Create user profile using the existing users/apartments relationship.
-      const { error: profileError } = await supabase.from("users").insert({
-        id: data.user.id,
-        auth_user_id: data.user.id,
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        society_id: societyData.id,
-        role: role,
-        apartment_id: apartmentId,
-      });
-
-      if (profileError) {
-        setError(profileError.message);
-        return;
-      }
-
-      if (role === "admin") {
-        const { error: requestError } = await supabase
-          .from("society_admin_requests")
-          .insert({
-            user_id: data.user.id,
-            society_id: societyData.id,
-            status: "pending",
-            requested_at: new Date().toISOString(),
-          });
-
-        if (requestError) {
-          setError(requestError.message);
-          return;
-        }
-
-        router.replace("/pending-approval");
-      } else if (role === "resident") {
-        router.replace("/resident-dashboard");
-      } else if (role === "maintenance") {
-        router.replace("/maintenance-dashboard");
-      } else if (role === "security") {
-        router.replace("/security-dashboard");
-      } else {
-        setError("Invalid user role.");
-      }
-    } catch (error) {
-      setError("Something went wrong while creating your account.");
+      const dashboard =
+        signupRole === "admin"
+          ? "/admin-dashboard"
+          : signupRole === "resident"
+            ? "/resident-dashboard"
+            : signupRole === "security"
+              ? "/security-dashboard"
+              : "/maintenance-dashboard";
+      router.replace(dashboard);
+    } catch (signupError) {
+      setError(
+        signupError instanceof Error
+          ? signupError.message
+          : "Something went wrong while creating your account.",
+      );
+      clearSignupDraft();
     }
+  };
+
+  const returnToSignup = () => {
+    clearSignupDraft();
+    router.replace("/signup");
+  };
+
+  const returnToSignin = () => {
+    clearSignupDraft();
+    router.replace("/signin");
   };
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Sign Up Failed</Text>
-        <Text style={styles.error}>{error}</Text>
+      <View style={styles.centerContainer}>
+        <StatusBar style="dark" />
+        <BrandMark />
+        <View style={styles.errorIcon}>
+          <SymbolView
+            name={{
+              ios: "exclamationmark.triangle",
+              android: "warning",
+              web: "warning",
+            }}
+            tintColor={colors.error}
+            size={24}
+          />
+        </View>
+        <Text style={[styles.pageTitle, { marginTop: 20 }]}>Sign Up Failed</Text>
+        <Text style={styles.inlineError}>{error}</Text>
+        <TouchableOpacity
+          style={[styles.primaryButton, styles.signupAction]}
+          onPress={returnToSignup}
+        >
+          <Text style={styles.primaryButtonText}>Start again</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.signupSecondaryAction}
+          onPress={returnToSignin}
+        >
+          <Text style={styles.link}>Already have an account? Sign in</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (confirmationRequired) {
+    return (
+      <View style={styles.centerContainer}>
+        <StatusBar style="dark" />
+        <BrandMark />
+        <View style={styles.errorIcon}>
+          <SymbolView
+            name={{
+              ios: "envelope.badge",
+              android: "mark_email_unread",
+              web: "mark_email_unread",
+            }}
+            tintColor={colors.brown}
+            size={24}
+          />
+        </View>
+        <Text style={[styles.pageTitle, { marginTop: 20 }]}>
+          Check your email
+        </Text>
+        <Text style={styles.pageSubtitle}>
+          Confirm your email address, then sign in to continue. Your signup has
+          been saved.
+        </Text>
+        <TouchableOpacity
+          style={[styles.primaryButton, styles.signupAction]}
+          onPress={() => router.replace("/signin")}
+        >
+          <Text style={styles.primaryButtonText}>Continue to sign in</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#A65D3B" />
-
-      <Text style={styles.title}>Creating Your Account</Text>
-
-      <Text style={styles.subtitle}>
+    <View style={styles.centerContainer}>
+      <StatusBar style="dark" />
+      <BackButton onPress={() => router.back()} />
+      <BrandMark />
+      <ActivityIndicator size="large" color={colors.copper} />
+      <Text style={[styles.pageTitle, { marginTop: 25 }]}>
+        Creating Your Account
+      </Text>
+      <Text style={styles.pageSubtitle}>
         Please wait while we set up your GATED account.
       </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F3E8D3",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 30,
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#6B3E2E",
-    marginTop: 25,
-    textAlign: "center",
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: "#A65D3B",
-    marginTop: 10,
-    textAlign: "center",
-  },
-
-  error: {
-    fontSize: 15,
-    color: "#8B0000",
-    marginTop: 15,
-    textAlign: "center",
-  },
-});

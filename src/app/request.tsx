@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SymbolView } from "expo-symbols";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -16,11 +16,21 @@ import {
   View,
 } from "react-native";
 
+import {
+  complaintCategories,
+  complaintPriorities,
+} from "../constants/complaints";
 import { supabase } from "../lib/supabase";
+import { colors as themeColors } from "../styles/theme";
+import BackButton from "../components/BackButton";
 
-const categories = ["Electrical", "Plumbing", "HVAC", "Security", "Other"];
-
-const priorities = ["low", "medium", "high"] as const;
+const maintenanceCategories = [
+  "Electrical",
+  "Plumbing",
+  "HVAC",
+  "Security",
+  "Other",
+];
 
 type RequestType = "complaint" | "maintenance";
 
@@ -32,7 +42,25 @@ type ExistingRequest = {
   status: string;
   title: string;
   updated_at: string | null;
+  assigned_to: string | null;
+  resolution_note: string | null;
+  resolved_at: string | null;
 };
+
+function FormLabel({
+  icon,
+  label,
+}: {
+  icon: SymbolViewProps["name"];
+  label: string;
+}) {
+  return (
+    <View style={styles.fieldLabel}>
+      <SymbolView name={icon} tintColor={colors.brown} size={17} />
+      <Text style={styles.label}>{label}</Text>
+    </View>
+  );
+}
 
 export default function Request() {
   const router = useRouter();
@@ -46,71 +74,110 @@ export default function Request() {
     type === "maintenance" ? "maintenance" : "complaint";
 
   const isMaintenance = requestType === "maintenance";
+  const categories = isMaintenance ? maintenanceCategories : complaintCategories;
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [priority, setPriority] = useState<(typeof priorities)[number]>("low");
+  const [priority, setPriority] =
+    useState<(typeof complaintPriorities)[number]>("normal");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [existingRequest, setExistingRequest] =
     useState<ExistingRequest | null>(null);
   const [loadingRequest, setLoadingRequest] = useState(Boolean(id));
+  const [assignedName, setAssignedName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
 
     const loadRequest = async () => {
-      const table = isMaintenance ? "maintenance_requests" : "complaints";
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      setLoadingRequest(true);
+      try {
+        const table = isMaintenance ? "maintenance_requests" : "complaints";
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-      if (!user) {
-        router.replace("/signin");
-        return;
-      }
+        if (authError) {
+          Alert.alert("Unable to load request", authError.message);
+          return;
+        }
 
-      const { data: profile } = await supabase
-        .from("users")
-        .select("id")
-        .eq("auth_user_id", user.id)
-        .single();
+        if (!user) {
+          router.replace("/signin");
+          return;
+        }
 
-      if (!profile) {
+        const { data: profile, error: profileError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("auth_user_id", user.id)
+          .single();
+
+        if (profileError || !profile) {
+          Alert.alert(
+            "Unable to load request",
+            profileError?.message || "Your user profile could not be found.",
+          );
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from(table)
+          .select(
+            "title, category, priority, status, description, created_at, updated_at, assigned_to, resolution_note, resolved_at",
+          )
+          .eq("id", id)
+          .eq("user_id", profile.id)
+          .single();
+
+        if (error || !data) {
+          Alert.alert(
+            "Unable to load request",
+            error?.message || "This request could not be found.",
+            [{ text: "Back", onPress: () => router.back() }],
+          );
+        } else {
+          setExistingRequest(data);
+          if (data.assigned_to) {
+            const { data: assignee, error: assigneeError } = await supabase
+              .from("users")
+              .select("name")
+              .eq("id", data.assigned_to)
+              .single();
+
+            if (assigneeError) {
+              Alert.alert(
+                "Unable to load assignment",
+                assigneeError.message,
+              );
+            } else {
+              setAssignedName(assignee.name);
+            }
+          }
+        }
+      } catch {
+        Alert.alert("Unable to load request", "Please try again.");
+      } finally {
         setLoadingRequest(false);
-        return;
       }
-
-      const { data, error } = await supabase
-        .from(table)
-        .select(
-          "title, category, priority, status, description, created_at, updated_at",
-        )
-        .eq("id", id)
-        .eq("user_id", profile.id)
-        .single();
-
-      if (error || !data) {
-        Alert.alert(
-          "Unable to load request",
-          "This request could not be found.",
-          [{ text: "Back", onPress: () => router.back() }],
-        );
-      } else {
-        setExistingRequest(data);
-      }
-      setLoadingRequest(false);
     };
 
     loadRequest();
   }, [id, isMaintenance]);
 
   const handleSubmit = async () => {
-    if (!title.trim() || !category || !description.trim()) {
+    if (
+      !title.trim() ||
+      !category ||
+      !categories.includes(category) ||
+      !description.trim()
+    ) {
       Alert.alert(
         "Incomplete request",
-        "Please complete the subject, category, and description.",
+        "Please complete the subject, choose a valid category, and add a description.",
       );
       return;
     }
@@ -147,6 +214,7 @@ export default function Request() {
       }
 
       const table = isMaintenance ? "maintenance_requests" : "complaints";
+      const createdAt = new Date().toISOString();
 
       const { error } = await supabase.from(table).insert({
         user_id: profile.id,
@@ -156,6 +224,8 @@ export default function Request() {
         category,
         priority,
         status: "submitted",
+        created_at: createdAt,
+        updated_at: createdAt,
       });
 
       if (error) {
@@ -203,6 +273,7 @@ export default function Request() {
         <RequestStatus
           request={existingRequest}
           isMaintenance={isMaintenance}
+          assignedName={assignedName}
           onBack={() => router.back()}
         />
       );
@@ -223,16 +294,16 @@ export default function Request() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backButton}>
-              <Text style={styles.backArrow}>←</Text>
-            </Pressable>
+            <BackButton onPress={() => router.back()} style={styles.backButton} />
 
             <View style={styles.headerCopy}>
               <Text style={styles.title}>
                 {isMaintenance ? "Request Maintenance" : "Raise Complaint"}
               </Text>
 
-              <Text style={styles.subtitle}>ESTATE REGISTRY • FLAT 402</Text>
+              <Text style={styles.subtitle}>
+                SOCIETY SERVICE • RESIDENT PORTAL
+              </Text>
             </View>
 
             <View style={styles.headerIcon}>
@@ -269,7 +340,7 @@ export default function Request() {
               <Text style={styles.docketSubtitle}>
                 {isMaintenance
                   ? "FACILITY SERVICE REQUEST"
-                  : "ESTATE STEWARDSHIP • SECTOR 4"}
+                  : "SOCIETY SERVICE REQUEST"}
               </Text>
             </View>
 
@@ -339,7 +410,14 @@ export default function Request() {
           </View>
 
           <View style={styles.formCard}>
-            <Text style={styles.label}>Issue Subject</Text>
+            <FormLabel
+              icon={{
+                ios: "text.alignleft",
+                android: "subject",
+                web: "subject",
+              }}
+              label="Issue Subject"
+            />
 
             <TextInput
               value={title}
@@ -349,11 +427,14 @@ export default function Request() {
                   ? "Describe the maintenance issue"
                   : "e.g. Intermittent corridor lighting on 4th floor"
               }
-              placeholderTextColor="#9DA6B6"
+              placeholderTextColor={colors.placeholder}
               style={styles.input}
             />
 
-            <Text style={styles.label}>Category</Text>
+            <FormLabel
+              icon={{ ios: "tag", android: "label", web: "label" }}
+              label="Category"
+            />
 
             <Pressable
               style={styles.categorySelector}
@@ -364,7 +445,15 @@ export default function Request() {
               >
                 {category || "Select Category"}
               </Text>
-              <Text style={styles.categoryChevron}>⌄</Text>
+              <SymbolView
+                name={{
+                  ios: "chevron.down",
+                  android: "expand_more",
+                  web: "expand_more",
+                }}
+                tintColor={colors.brown}
+                size={20}
+              />
             </Pressable>
 
             <Modal
@@ -395,10 +484,13 @@ export default function Request() {
               </Pressable>
             </Modal>
 
-            <Text style={styles.label}>Priority Level</Text>
+            <FormLabel
+              icon={{ ios: "flag", android: "flag", web: "flag" }}
+              label="Priority Level"
+            />
 
             <View style={styles.priorityRow}>
-              {priorities.map((item) => (
+              {complaintPriorities.map((item) => (
                 <Pressable
                   key={item}
                   onPress={() => setPriority(item)}
@@ -419,7 +511,14 @@ export default function Request() {
               ))}
             </View>
 
-            <Text style={styles.label}>Description</Text>
+            <FormLabel
+              icon={{
+                ios: "text.alignleft",
+                android: "subject",
+                web: "subject",
+              }}
+              label="Description"
+            />
 
             <TextInput
               value={description}
@@ -429,31 +528,11 @@ export default function Request() {
                   ? "Describe the facility work required"
                   : "Describe the issue in detail for the facility team..."
               }
-              placeholderTextColor="#9DA6B6"
+              placeholderTextColor={colors.placeholder}
               multiline
               textAlignVertical="top"
               style={[styles.input, styles.description]}
             />
-
-            <View style={styles.documentation}>
-              <View style={styles.cameraIcon}>
-                <SymbolView
-                  name={{
-                    ios: "camera",
-                    android: "photo_camera",
-                    web: "photo_camera",
-                  }}
-                  tintColor={colors.brown}
-                  size={27}
-                />
-              </View>
-
-              <Text style={styles.documentationTitle}>
-                Attach photo (optional, image_url)
-              </Text>
-
-              <Text style={styles.documentationText}>JPEG, PNG up to 10MB</Text>
-            </View>
 
             <Pressable
               style={[styles.submitButton, submitting && styles.disabled]}
@@ -464,7 +543,15 @@ export default function Request() {
                 {submitting ? "Submitting..." : "Submit Request"}
               </Text>
 
-              <Text style={styles.submitArrow}>→</Text>
+              <SymbolView
+                name={{
+                  ios: "arrow.right",
+                  android: "arrow_forward",
+                  web: "arrow_forward",
+                }}
+                tintColor={colors.white}
+                size={20}
+              />
             </Pressable>
           </View>
         </ScrollView>
@@ -476,10 +563,12 @@ export default function Request() {
 function RequestStatus({
   request,
   isMaintenance,
+  assignedName,
   onBack,
 }: {
   request: ExistingRequest;
   isMaintenance: boolean;
+  assignedName: string | null;
   onBack: () => void;
 }) {
   return (
@@ -487,14 +576,12 @@ function RequestStatus({
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.statusContainer}>
         <View style={styles.statusHeader}>
-          <Pressable onPress={onBack} style={styles.backButton}>
-            <Text style={styles.backArrow}>←</Text>
-          </Pressable>
+          <BackButton onPress={onBack} style={styles.backButton} />
           <View style={styles.headerCopy}>
             <Text style={styles.title}>
               {isMaintenance ? "Maintenance Status" : "Complaint Status"}
             </Text>
-            <Text style={styles.subtitle}>ESTATE REGISTRY • FLAT 402</Text>
+            <Text style={styles.subtitle}>REQUEST TRACKING • SOCIETY SERVICE</Text>
           </View>
         </View>
 
@@ -513,13 +600,27 @@ function RequestStatus({
             label="Submitted"
             value={new Date(request.created_at).toLocaleString()}
           />
+          {assignedName && <StatusRow label="Assigned to" value={assignedName} />}
           {request.updated_at && (
             <StatusRow
               label="Last Updated"
               value={new Date(request.updated_at).toLocaleString()}
             />
           )}
+          {request.resolved_at && (
+            <StatusRow
+              label="Resolved"
+              value={new Date(request.resolved_at).toLocaleString()}
+            />
+          )}
         </View>
+
+        {request.resolution_note && (
+          <View style={styles.statusNotice}>
+            <Text style={styles.statusNoticeTitle}>Resolution</Text>
+            <Text style={styles.statusNoticeText}>{request.resolution_note}</Text>
+          </View>
+        )}
 
         <View style={styles.statusNotice}>
           <Text style={styles.statusNoticeTitle}>Request tracking</Text>
@@ -535,23 +636,37 @@ function RequestStatus({
 }
 
 function StatusRow({ label, value }: { label: string; value: string }) {
+  const icon: SymbolViewProps["name"] =
+    label === "Category"
+      ? { ios: "tag", android: "label", web: "label" }
+      : label === "Priority"
+        ? { ios: "flag", android: "flag", web: "flag" }
+        : label === "Assigned to"
+          ? { ios: "person", android: "person", web: "person" }
+          : { ios: "clock", android: "schedule", web: "schedule" };
+
   return (
     <View style={styles.statusRow}>
-      <Text style={styles.statusRowLabel}>{label}</Text>
+      <View style={styles.statusLabel}>
+        <SymbolView name={icon} tintColor={colors.brown} size={15} />
+        <Text style={styles.statusRowLabel}>{label}</Text>
+      </View>
       <Text style={styles.statusRowValue}>{value}</Text>
     </View>
   );
 }
 
 const colors = {
-  background: "#FFF9F7",
-  brown: "#AE6039",
-  darkBrown: "#713719",
-  ink: "#3A1B10",
-  muted: "#806D66",
-  peach: "#FFF5E9",
-  peachStrong: "#F4E5CB",
-  white: "#FFFFFF",
+  background: themeColors.background,
+  brown: themeColors.copper,
+  darkBrown: themeColors.brown,
+  ink: themeColors.ink,
+  muted: themeColors.muted,
+  peach: themeColors.peach,
+  peachStrong: themeColors.peachStrong,
+  white: themeColors.white,
+  placeholder: themeColors.placeholder,
+  border: themeColors.softCopper,
 };
 
 const styles = StyleSheet.create({
@@ -572,23 +687,23 @@ const styles = StyleSheet.create({
   },
 
   statusContainer: {
-    paddingBottom: 40,
-    paddingHorizontal: 28,
-    paddingTop: 25,
+    paddingBottom: 34,
+    paddingHorizontal: 22,
+    paddingTop: 22,
   },
 
   statusHeader: {
     alignItems: "center",
     flexDirection: "row",
-    marginBottom: 35,
+    marginBottom: 24,
   },
 
   statusCard: {
     backgroundColor: colors.peach,
-    borderColor: colors.brown,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    padding: 25,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 20,
   },
 
   statusBadge: {
@@ -609,36 +724,42 @@ const styles = StyleSheet.create({
   statusTitle: {
     color: colors.darkBrown,
     fontFamily: "Georgia",
-    fontSize: 27,
+    fontSize: 23,
     fontWeight: "700",
-    marginTop: 22,
+    marginTop: 17,
   },
 
   statusDescription: {
     color: colors.muted,
-    fontSize: 17,
-    lineHeight: 27,
-    marginTop: 14,
+    fontSize: 15,
+    lineHeight: 23,
+    marginTop: 12,
   },
 
   statusRow: {
-    borderTopColor: "#E3C8B9",
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 22,
-    paddingTop: 15,
+    marginTop: 16,
+    paddingTop: 12,
   },
 
   statusRowLabel: {
     color: colors.muted,
-    fontSize: 15,
+    fontSize: 13,
+  },
+
+  statusLabel: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 7,
   },
 
   statusRowValue: {
     color: colors.ink,
     flex: 1,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "600",
     marginLeft: 15,
     textAlign: "right",
@@ -646,44 +767,38 @@ const styles = StyleSheet.create({
 
   statusNotice: {
     backgroundColor: colors.peachStrong,
-    borderRadius: 13,
-    marginTop: 20,
-    padding: 18,
+    borderRadius: 12,
+    marginTop: 16,
+    padding: 15,
   },
 
   statusNoticeTitle: {
     color: colors.darkBrown,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "600",
   },
 
   statusNoticeText: {
     color: colors.muted,
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 7,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 6,
   },
 
   container: {
-    paddingBottom: 30,
-    paddingHorizontal: 28,
-    paddingTop: 20,
+    paddingBottom: 34,
+    paddingHorizontal: 22,
+    paddingTop: 22,
   },
 
   header: {
     alignItems: "center",
     flexDirection: "row",
-    marginBottom: 45,
+    marginBottom: 24,
   },
 
   backButton: {
     paddingRight: 18,
-  },
-
-  backArrow: {
-    color: colors.ink,
-    fontSize: 42,
-    lineHeight: 42,
   },
 
   headerCopy: {
@@ -693,14 +808,14 @@ const styles = StyleSheet.create({
   title: {
     color: colors.ink,
     fontFamily: "Georgia",
-    fontSize: 29,
+    fontSize: 25,
     fontWeight: "700",
   },
 
   subtitle: {
     color: colors.brown,
-    fontSize: 15,
-    letterSpacing: 1.4,
+    fontSize: 12,
+    letterSpacing: 1,
     marginTop: 3,
   },
 
@@ -708,9 +823,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.darkBrown,
     borderRadius: 28,
-    height: 56,
+    height: 48,
     justifyContent: "center",
-    width: 56,
+    width: 48,
   },
 
   docket: {
@@ -720,64 +835,64 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1.5,
     flexDirection: "row",
-    minHeight: 145,
-    paddingHorizontal: 28,
+    minHeight: 96,
+    paddingHorizontal: 16,
   },
 
   docketIcon: {
     alignItems: "center",
     backgroundColor: colors.peachStrong,
-    borderRadius: 35,
-    height: 69,
+    borderRadius: 28,
+    height: 56,
     justifyContent: "center",
-    width: 69,
+    width: 56,
   },
 
   docketCopy: {
     flex: 1,
-    marginLeft: 20,
+    marginLeft: 14,
   },
 
   docketTitle: {
     color: colors.darkBrown,
-    fontSize: 25,
+    fontSize: 17,
   },
 
   docketSubtitle: {
     color: colors.brown,
-    fontSize: 14,
+    fontSize: 11,
     marginTop: 4,
   },
 
   draftingPill: {
-    backgroundColor: "#FFF1BF",
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 13,
+    backgroundColor: colors.peachStrong,
+    borderRadius: 20,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
   },
 
   draftingText: {
     color: colors.darkBrown,
-    fontSize: 15,
+    fontSize: 11,
   },
 
   modeSwitch: {
     backgroundColor: colors.peach,
     borderColor: colors.brown,
-    borderRadius: 17,
+    borderRadius: 12,
     borderWidth: 1.5,
     flexDirection: "row",
-    marginTop: 34,
-    padding: 7,
+    marginTop: 20,
+    padding: 5,
   },
 
   mode: {
     alignItems: "center",
-    borderRadius: 14,
+    borderRadius: 10,
     flex: 1,
     flexDirection: "row",
-    gap: 13,
-    height: 64,
+    gap: 8,
+    height: 48,
     justifyContent: "center",
   },
 
@@ -787,7 +902,7 @@ const styles = StyleSheet.create({
 
   modeText: {
     color: colors.darkBrown,
-    fontSize: 20,
+    fontSize: 14,
   },
 
   activeModeText: {
@@ -796,30 +911,37 @@ const styles = StyleSheet.create({
   },
 
   formCard: {
-    backgroundColor: colors.peach,
-    borderColor: colors.brown,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    marginTop: 34,
-    padding: 28,
+    backgroundColor: colors.white,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    marginTop: 20,
+    padding: 20,
   },
 
   label: {
     color: colors.darkBrown,
-    fontSize: 22,
-    marginBottom: 12,
-    marginTop: 3,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  fieldLabel: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+    marginTop: 14,
   },
 
   input: {
     backgroundColor: colors.peach,
     borderColor: colors.brown,
-    borderRadius: 17,
-    borderWidth: 1.5,
+    borderRadius: 10,
+    borderWidth: 1,
     color: colors.ink,
-    fontSize: 19,
-    minHeight: 80,
-    paddingHorizontal: 27,
+    fontSize: 15,
+    minHeight: 52,
+    paddingHorizontal: 14,
   },
 
   categoryGrid: {
@@ -835,24 +957,18 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     borderWidth: 1.5,
     flexDirection: "row",
-    height: 80,
+    height: 52,
     justifyContent: "space-between",
-    paddingHorizontal: 27,
+    paddingHorizontal: 14,
   },
 
   categoryValue: {
     color: colors.darkBrown,
-    fontSize: 19,
+    fontSize: 15,
   },
 
   placeholder: {
-    color: "#9DA6B6",
-  },
-
-  categoryChevron: {
-    color: colors.brown,
-    fontSize: 27,
-    fontWeight: "700",
+    color: colors.placeholder,
   },
 
   modalBackdrop: {
@@ -873,19 +989,19 @@ const styles = StyleSheet.create({
   categoryMenuTitle: {
     color: colors.darkBrown,
     fontFamily: "Georgia",
-    fontSize: 22,
+    fontSize: 17,
     marginBottom: 8,
   },
 
   categoryMenuOption: {
-    borderTopColor: "#F0DCD0",
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     paddingVertical: 15,
   },
 
   categoryMenuText: {
     color: colors.ink,
-    fontSize: 17,
+    fontSize: 15,
   },
 
   categoryOption: {
@@ -899,7 +1015,7 @@ const styles = StyleSheet.create({
 
   categoryText: {
     color: colors.darkBrown,
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
   },
 
@@ -924,7 +1040,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     flex: 1,
     justifyContent: "center",
-    minHeight: 60,
+    minHeight: 48,
   },
 
   selectedPriority: {
@@ -933,56 +1049,22 @@ const styles = StyleSheet.create({
 
   priorityText: {
     color: colors.darkBrown,
-    fontSize: 18,
+    fontSize: 14,
   },
 
   description: {
-    height: 180,
-    paddingTop: 20,
-  },
-
-  documentation: {
-    alignItems: "center",
-    backgroundColor: colors.peachStrong,
-    borderColor: colors.brown,
-    borderRadius: 17,
-    borderStyle: "dashed",
-    borderWidth: 1.5,
-    marginTop: 31,
-    paddingHorizontal: 15,
-    paddingVertical: 28,
-  },
-
-  cameraIcon: {
-    alignItems: "center",
-    backgroundColor: colors.white,
-    borderRadius: 28,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-
-  documentationTitle: {
-    color: colors.darkBrown,
-    fontSize: 18,
-    marginTop: 17,
-    textAlign: "center",
-  },
-
-  documentationText: {
-    color: colors.brown,
-    fontSize: 16,
-    marginTop: 7,
+    height: 140,
+    paddingTop: 14,
   },
 
   submitButton: {
     alignItems: "center",
     backgroundColor: colors.brown,
-    borderRadius: 17,
+    borderRadius: 12,
     flexDirection: "row",
-    height: 88,
+    height: 56,
     justifyContent: "center",
-    marginTop: 38,
+    marginTop: 24,
   },
 
   disabled: {
@@ -991,13 +1073,8 @@ const styles = StyleSheet.create({
 
   submitText: {
     color: colors.white,
-    fontSize: 26,
+    fontSize: 16,
     fontWeight: "600",
   },
 
-  submitArrow: {
-    color: colors.white,
-    fontSize: 34,
-    marginLeft: 18,
-  },
 });

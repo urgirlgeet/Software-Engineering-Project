@@ -1,7 +1,7 @@
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SymbolView } from "expo-symbols";
-import { useEffect, useState } from "react";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { useCallback, useState } from "react";
 import {
     Alert,
     Pressable,
@@ -26,7 +26,7 @@ type AdminProfile = {
 };
 
 type AdminActionProps = {
-  icon: string;
+  icon: SymbolViewProps["name"];
   title: string;
   detail: string;
   onPress: () => void;
@@ -35,6 +35,7 @@ type AdminActionProps = {
 function AdminAction({ icon, title, detail, onPress }: AdminActionProps) {
   return (
     <Pressable
+      accessibilityRole="button"
       style={({ pressed }) => [
         dashboardStyles.actionCard,
         pressed && { opacity: 0.8 },
@@ -43,7 +44,7 @@ function AdminAction({ icon, title, detail, onPress }: AdminActionProps) {
     >
       <View style={dashboardStyles.actionIcon}>
         <SymbolView
-          name={icon as any}
+          name={icon}
           tintColor={dashboardColors.brown}
           size={23}
         />
@@ -70,11 +71,25 @@ export default function AdminDashboard() {
 
   const [showAssignModal, setShowAssignModal] = useState(false);
 
-  useEffect(() => {
-    loadDashboard();
+  const loadComplaints = useCallback(async (societyId: string) => {
+    const { data, error } = await supabase
+      .from("complaints")
+      .select("id, title, category, priority, status, created_at, assigned_to")
+      .eq("society_id", societyId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      console.log("Complaint fetch error:", error);
+      return;
+    }
+
+    setComplaints(data || []);
   }, []);
 
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
+    setChecking(true);
     try {
       const { data: authData } = await supabase.auth.getUser();
 
@@ -85,7 +100,7 @@ export default function AdminDashboard() {
 
       const { data: admin, error } = await supabase
         .from("users")
-        .select("name, society_id, role")
+        .select("id, name, society_id, role")
         .eq("auth_user_id", authData.user.id)
         .single();
 
@@ -120,24 +135,13 @@ export default function AdminDashboard() {
     } finally {
       setChecking(false);
     }
-  };
+  }, [loadComplaints, router]);
 
-  const loadComplaints = async (societyId: string) => {
-    const { data, error } = await supabase
-      .from("complaints")
-      .select("id, title, category, priority, status, created_at, assigned_to")
-      .eq("society_id", societyId)
-      .order("created_at", {
-        ascending: false,
-      });
-
-    if (error) {
-      console.log("Complaint fetch error:", error);
-      return;
-    }
-
-    setComplaints(data || []);
-  };
+  useFocusEffect(
+    useCallback(() => {
+      void loadDashboard();
+    }, [loadDashboard]),
+  );
 
   const openAssignModal = (complaintId: string) => {
     setSelectedComplaint(complaintId);
@@ -199,7 +203,7 @@ export default function AdminDashboard() {
                 android: "home",
                 web: "home",
               }}
-              tintColor="#FBE5D6"
+              tintColor={dashboardColors.peachStrong}
               size={18}
             />
           </Pressable>
@@ -239,42 +243,54 @@ export default function AdminDashboard() {
 
         <View style={dashboardStyles.actionGrid}>
           <AdminAction
-            icon="person.badge.plus"
+            icon={{
+              ios: "person.badge.plus",
+              android: "person_add",
+              web: "person_add",
+            }}
             title="Approvals"
             detail="Review resident access"
             onPress={() => router.push("/admin-approvals")}
           />
 
           <AdminAction
-            icon="person.3"
+            icon={{ ios: "person.3", android: "groups", web: "groups" }}
             title="Residents"
             detail="Manage society residents"
             onPress={() => router.push("/residents" as any)}
           />
 
           <AdminAction
-            icon="exclamationmark.bubble"
+            icon={{
+              ios: "exclamationmark.bubble",
+              android: "chat_bubble",
+              web: "chat_bubble",
+            }}
             title="Complaints"
             detail="Manage resident complaints"
-            onPress={() => {}}
+            onPress={() => router.push("/complaints" as any)}
           />
 
           <AdminAction
-            icon="wrench.and.screwdriver"
+            icon={{ ios: "wrench.and.screwdriver", android: "build", web: "build" }}
             title="Maintenance"
             detail="Monitor maintenance work"
             onPress={() => router.push("/maintenance-dashboard")}
           />
 
           <AdminAction
-            icon="megaphone"
+            icon={{ ios: "megaphone", android: "campaign", web: "campaign" }}
             title="Announcements"
             detail="Manage society notices"
             onPress={() => router.push("/notices" as any)}
           />
 
           <AdminAction
-            icon="shield.lefthalf.filled"
+            icon={{
+              ios: "shield.lefthalf.filled",
+              android: "security",
+              web: "security",
+            }}
             title="Security"
             detail="Monitor gate activity"
             onPress={() => router.push("/security-dashboard")}
@@ -302,6 +318,12 @@ export default function AdminDashboard() {
             <ComplaintCard
               key={complaint.id}
               complaint={complaint}
+              onPress={() =>
+                router.push({
+                  pathname: "/complaint-details" as any,
+                  params: { id: complaint.id },
+                })
+              }
               onAssign={() => openAssignModal(complaint.id)}
             />
           ))

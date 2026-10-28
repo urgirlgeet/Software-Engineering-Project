@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { SymbolView } from "expo-symbols";
 import { useEffect, useState } from "react";
 import {
     Alert,
@@ -12,6 +13,7 @@ import {
 
 import { supabase } from "../lib/supabase";
 import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
+import QuickActionCard from "../components/resident/QuickActionCard";
 
 type Profile = {
   name: string | null;
@@ -110,10 +112,17 @@ export default function SecurityDashboard() {
             <Text style={dashboardStyles.pageSubtitle}>SECURITY PORTAL</Text>
           </View>
 
-          <Pressable onPress={() => router.replace("/")}>
-            <View style={dashboardStyles.homeMark}>
-              <Text style={{ color: dashboardColors.white }}>⌂</Text>
-            </View>
+          <Pressable
+            onPress={() => router.replace("/")}
+            style={dashboardStyles.homeMark}
+            accessibilityRole="button"
+            accessibilityLabel="Go to home"
+          >
+            <SymbolView
+              name={{ ios: "house.fill", android: "home", web: "home" }}
+              tintColor={dashboardColors.white}
+              size={18}
+            />
           </Pressable>
         </View>
 
@@ -126,7 +135,11 @@ export default function SecurityDashboard() {
             </Text>
 
             <View style={dashboardStyles.addressLine}>
-              <Text style={{ color: dashboardColors.brown }}>•</Text>
+              <SymbolView
+                name={{ ios: "building.2", android: "business", web: "business" }}
+                tintColor={dashboardColors.brown}
+                size={15}
+              />
               <Text style={dashboardStyles.address}>{societyName}</Text>
             </View>
           </View>
@@ -139,63 +152,47 @@ export default function SecurityDashboard() {
         </View>
 
         <View style={dashboardStyles.actionGrid}>
-          <Pressable
-            style={dashboardStyles.actionCard}
+          <QuickActionCard
+            icon={{ ios: "person.2", android: "people", web: "people" }}
+            title="Visitors"
+            detail="Manage visitor entries"
             onPress={() => router.push("/visitors" as any)}
-          >
-            <Text style={dashboardStyles.actionTitle}>Visitors</Text>
-            <Text style={dashboardStyles.actionDetail}>
-              Manage visitor entries
-            </Text>
-          </Pressable>
+          />
 
-          <Pressable
-            style={dashboardStyles.actionCard}
+          <QuickActionCard
+            icon={{ ios: "shippingbox", android: "inventory_2", web: "inventory_2" }}
+            title="Deliveries"
+            detail="Track incoming deliveries"
             onPress={() => router.push("/deliveries" as any)}
-          >
-            <Text style={dashboardStyles.actionTitle}>Deliveries</Text>
-            <Text style={dashboardStyles.actionDetail}>
-              Track incoming deliveries
-            </Text>
-          </Pressable>
+          />
 
-          <Pressable
-            style={dashboardStyles.actionCard}
+          <QuickActionCard
+            icon={{ ios: "door.left.hand.open", android: "door_front", web: "door_front" }}
+            title="Gate Activity"
+            detail="View gate activity"
             onPress={() => router.push("/gate-activity" as any)}
-          >
-            <Text style={dashboardStyles.actionTitle}>Gate Activity</Text>
-            <Text style={dashboardStyles.actionDetail}>View gate activity</Text>
-          </Pressable>
+          />
 
-          <Pressable
-            style={dashboardStyles.actionCard}
+          <QuickActionCard
+            icon={{ ios: "person.3", android: "groups", web: "groups" }}
+            title="Residents"
+            detail="View resident information"
             onPress={() => router.push("/residents" as any)}
-          >
-            <Text style={dashboardStyles.actionTitle}>Residents</Text>
-            <Text style={dashboardStyles.actionDetail}>
-              View resident information
-            </Text>
-          </Pressable>
+          />
 
-          <Pressable
-            style={dashboardStyles.actionCard}
+          <QuickActionCard
+            icon={{ ios: "cross.case", android: "emergency", web: "emergency" }}
+            title="Emergency"
+            detail="Emergency information"
             onPress={() => router.push("/emergency" as any)}
-          >
-            <Text style={dashboardStyles.actionTitle}>Emergency</Text>
-            <Text style={dashboardStyles.actionDetail}>
-              Emergency information
-            </Text>
-          </Pressable>
+          />
 
-          <Pressable
-            style={dashboardStyles.actionCard}
+          <QuickActionCard
+            icon={{ ios: "megaphone", android: "campaign", web: "campaign" }}
+            title="Announcements"
+            detail="Society announcements"
             onPress={() => router.push("/notices" as any)}
-          >
-            <Text style={dashboardStyles.actionTitle}>Announcements</Text>
-            <Text style={dashboardStyles.actionDetail}>
-              Society announcements
-            </Text>
-          </Pressable>
+          />
         </View>
 
         <View style={dashboardStyles.sectionHeading}>
@@ -205,9 +202,22 @@ export default function SecurityDashboard() {
         </View>
 
         <Pressable style={dashboardStyles.requestShortcut} onPress={logout}>
+          <SymbolView
+            name={{
+              ios: "rectangle.portrait.and.arrow.right",
+              android: "logout",
+              web: "logout",
+            }}
+            tintColor={dashboardColors.brown}
+            size={18}
+          />
           <Text style={dashboardStyles.requestShortcutText}>Sign Out</Text>
 
-          <Text style={dashboardStyles.requestShortcutArrow}>→</Text>
+          <SymbolView
+            name={{ ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" }}
+            tintColor={dashboardColors.brown}
+            size={18}
+          />
         </Pressable>
       </ScrollView>
     </SafeAreaView>

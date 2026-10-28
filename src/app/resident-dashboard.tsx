@@ -1,6 +1,7 @@
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { SymbolView } from "expo-symbols";
+import { useCallback, useState } from "react";
 import {
     Alert,
     Pressable,
@@ -11,7 +12,7 @@ import {
 } from "react-native";
 
 import { supabase } from "../lib/supabase";
-import { dashboardStyles } from "../styles/dashboardStyles";
+import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
 
 import QuickActionCard from "../components/resident/QuickActionCard";
 import RequestCard, { RequestItem } from "../components/resident/RequestCard";
@@ -58,11 +59,8 @@ export default function ResidentDashboard() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
     try {
       const {
         data: { user },
@@ -182,7 +180,13 @@ export default function ResidentDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadDashboard();
+    }, [loadDashboard]),
+  );
 
   const logout = async () => {
     await supabase.auth.signOut();
@@ -216,7 +220,11 @@ export default function ResidentDashboard() {
 
         <View style={dashboardStyles.actionGrid}>
           <QuickActionCard
-            icon="exclamationmark.bubble"
+            icon={{
+              ios: "exclamationmark.bubble",
+              android: "chat_bubble",
+              web: "chat_bubble",
+            }}
             title="Raise Complaint"
             detail="Report an issue"
             onPress={() =>
@@ -228,23 +236,27 @@ export default function ResidentDashboard() {
           />
 
           <QuickActionCard
-            icon="person.badge.plus"
+            icon={{
+              ios: "person.badge.plus",
+              android: "person_add",
+              web: "person_add",
+            }}
             title="Invite Visitor"
             detail="Create visitor pass"
             onPress={() => router.push("/visitors" as any)}
           />
 
           <QuickActionCard
-            icon="creditcard"
+            icon={{ ios: "creditcard", android: "credit_card", web: "credit_card" }}
             title="Pay Dues"
             detail="View pending payments"
             onPress={() => router.push("/bills" as any)}
           />
 
           <QuickActionCard
-            icon="leaf"
-            title="Book Amenity"
-            detail="Private salons & courts"
+            icon={{ ios: "leaf", android: "park", web: "park" }}
+            title="Community Services"
+            detail="Explore resident tools"
             onPress={() => router.push("/explore")}
           />
         </View>
@@ -283,7 +295,7 @@ export default function ResidentDashboard() {
         )}
 
         <SectionHeading
-          title="My Active Complaints"
+          title="My Complaints"
           count={complaints.length.toString()}
         />
 
@@ -342,6 +354,7 @@ export default function ResidentDashboard() {
 
         <Pressable
           style={dashboardStyles.requestShortcut}
+          accessibilityRole="button"
           onPress={() =>
             router.push({
               pathname: "/request",
@@ -349,11 +362,20 @@ export default function ResidentDashboard() {
             })
           }
         >
+          <SymbolView
+            name={{ ios: "wrench.and.screwdriver", android: "build", web: "build" }}
+            tintColor={dashboardColors.brown}
+            size={18}
+          />
           <Text style={dashboardStyles.requestShortcutText}>
             Request Maintenance
           </Text>
 
-          <Text style={dashboardStyles.requestShortcutArrow}>→</Text>
+          <SymbolView
+            name={{ ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" }}
+            tintColor={dashboardColors.brown}
+            size={18}
+          />
         </Pressable>
 
         <SectionHeading title="Recent Notices" action="Community Board" />
@@ -364,7 +386,11 @@ export default function ResidentDashboard() {
             notices.map((notice) => (
               <View key={notice.id} style={dashboardStyles.noticeRow}>
                 <View style={dashboardStyles.noticeIcon}>
-                  <Text style={dashboardStyles.noticeIconText}>≡</Text>
+                  <SymbolView
+                    name={{ ios: "megaphone", android: "campaign", web: "campaign" }}
+                    tintColor={dashboardColors.brown}
+                    size={18}
+                  />
                 </View>
                 <View style={dashboardStyles.noticeCopy}>
                   <Text numberOfLines={1} style={dashboardStyles.noticeTitle}>

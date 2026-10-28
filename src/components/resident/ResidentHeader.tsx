@@ -1,6 +1,9 @@
 import { SymbolView } from "expo-symbols";
 import { Image, Pressable, Text, View } from "react-native";
-import { colors, styles } from "../../styles/theme";
+import {
+  dashboardColors,
+  dashboardStyles as styles,
+} from "../../styles/dashboardStyles";
 
 type Props = {
   name: string;
@@ -31,7 +34,7 @@ export default function ResidentHeader({
               android: "notifications_none",
               web: "notifications_none",
             }}
-            tintColor={colors.ink}
+            tintColor={dashboardColors.ink}
             size={21}
           />
 
@@ -42,7 +45,7 @@ export default function ResidentHeader({
                 android: "logout",
                 web: "logout",
               }}
-              tintColor={colors.white}
+              tintColor={dashboardColors.white}
               size={19}
             />
           </Pressable>
@@ -64,7 +67,7 @@ export default function ResidentHeader({
                 android: "business",
                 web: "business",
               }}
-              tintColor={colors.brown}
+              tintColor={dashboardColors.brown}
               size={15}
             />
 

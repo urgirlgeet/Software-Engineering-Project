@@ -1,4 +1,4 @@
-import { SymbolView } from "expo-symbols";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Pressable, Text, View } from "react-native";
 
 import { dashboardColors, dashboardStyles } from "../../styles/dashboardStyles";
@@ -8,25 +8,29 @@ type ResidentBottomNavProps = {
   onNavigate: (route: string) => void;
 };
 
-const items = [
+const items: {
+  label: string;
+  icon: SymbolViewProps["name"];
+  route: string;
+}[] = [
   {
     label: "Home",
-    icon: "house.fill",
+    icon: { ios: "house.fill", android: "home", web: "home" },
     route: "/resident-dashboard",
   },
   {
     label: "Requests",
-    icon: "doc.text",
+    icon: { ios: "doc.text", android: "description", web: "description" },
     route: "/request",
   },
   {
     label: "Visitors",
-    icon: "person.2",
+    icon: { ios: "person.2", android: "people", web: "people" },
     route: "/visitors",
   },
   {
     label: "Notices",
-    icon: "megaphone",
+    icon: { ios: "megaphone", android: "campaign", web: "campaign" },
     route: "/notices",
   },
 ];
@@ -45,9 +49,11 @@ export default function ResidentBottomNav({
             key={item.label}
             style={dashboardStyles.navItem}
             onPress={() => onNavigate(item.route)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
           >
             <SymbolView
-              name={{}}
+              name={item.icon}
               tintColor={
                 isActive ? dashboardColors.brown : dashboardColors.muted
               }

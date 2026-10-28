@@ -1,10 +1,10 @@
-import { SymbolView } from "expo-symbols";
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Pressable, Text, View } from "react-native";
 
 import { dashboardColors, dashboardStyles } from "../../styles/dashboardStyles";
 
 type QuickActionCardProps = {
-  icon: string;
+  icon: SymbolViewProps["name"];
   title: string;
   detail: string;
   onPress: () => void;
@@ -18,6 +18,7 @@ export default function QuickActionCard({
 }: QuickActionCardProps) {
   return (
     <Pressable
+      accessibilityRole="button"
       style={({ pressed }) => [
         dashboardStyles.actionCard,
         pressed && { opacity: 0.8 },
@@ -26,7 +27,7 @@ export default function QuickActionCard({
     >
       <View style={dashboardStyles.actionIcon}>
         <SymbolView
-          name={icon as any}
+          name={icon}
           tintColor={dashboardColors.brown}
           size={22}
         />

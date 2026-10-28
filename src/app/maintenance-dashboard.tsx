@@ -1,6 +1,7 @@
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { SymbolView } from "expo-symbols";
+import { useCallback, useState } from "react";
 import {
     Alert,
     Pressable,
@@ -30,11 +31,8 @@ export default function MaintenanceDashboard() {
   const [societyName, setSocietyName] = useState("");
   const [complaints, setComplaints] = useState<AdminComplaint[]>([]);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
+    setChecking(true);
     try {
       const { data: authData } = await supabase.auth.getUser();
 
@@ -97,7 +95,13 @@ export default function MaintenanceDashboard() {
     } finally {
       setChecking(false);
     }
-  };
+  }, [router]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadDashboard();
+    }, [loadDashboard]),
+  );
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -135,14 +139,11 @@ export default function MaintenanceDashboard() {
             style={dashboardStyles.homeMark}
             onPress={() => router.push("/maintenance-dashboard")}
           >
-            <Text
-              style={{
-                color: dashboardColors.white,
-                fontSize: 18,
-              }}
-            >
-              ⌂
-            </Text>
+            <SymbolView
+              name={{ ios: "house.fill", android: "home", web: "home" }}
+              tintColor={dashboardColors.white}
+              size={18}
+            />
           </Pressable>
         </View>
 
@@ -180,7 +181,16 @@ export default function MaintenanceDashboard() {
           </View>
         ) : (
           complaints.map((complaint) => (
-            <ComplaintCard key={complaint.id} complaint={complaint} />
+            <ComplaintCard
+              key={complaint.id}
+              complaint={complaint}
+              onPress={() =>
+                router.push({
+                  pathname: "/complaint-details" as any,
+                  params: { id: complaint.id },
+                })
+              }
+            />
           ))
         )}
 
@@ -204,7 +214,20 @@ export default function MaintenanceDashboard() {
         </Pressable>
 
         <Pressable style={dashboardStyles.requestCard} onPress={handleSignOut}>
-          <Text style={dashboardStyles.requestTitle}>Sign Out</Text>
+          <View style={dashboardStyles.requestHeader}>
+            <SymbolView
+              name={{
+                ios: "rectangle.portrait.and.arrow.right",
+                android: "logout",
+                web: "logout",
+              }}
+              tintColor={dashboardColors.brown}
+              size={19}
+            />
+            <Text style={[dashboardStyles.requestTitle, { marginLeft: 10 }]}>
+              Sign Out
+            </Text>
+          </View>
         </Pressable>
 
         <View style={{ height: 70 }} />
