@@ -10,7 +10,7 @@ import { clearSignupDraft, getSignupDraft } from "../lib/signupDraft";
 import { supabase } from "../lib/supabase";
 import { colors, styles } from "../styles/theme";
 
-const signupRoles = ["resident", "admin", "security", "maintenance"] as const;
+const signupRoles = ["resident"] as const;
 type SignupRole = (typeof signupRoles)[number];
 
 function getSignupErrorMessage(message: string, code?: string) {
@@ -27,11 +27,10 @@ function getSignupErrorMessage(message: string, code?: string) {
 
 export default function CompleteSignup() {
   const router = useRouter();
-  const { societyId, role, apartment, employeeId } = useLocalSearchParams<{
+  const { societyId, role, apartment } = useLocalSearchParams<{
     societyId: string;
     role: string;
     apartment: string;
-    employeeId: string;
   }>();
 
   const started = useRef(false);
@@ -57,13 +56,8 @@ export default function CompleteSignup() {
       return;
     }
 
-    if (role === "resident" && !apartment?.trim()) {
+    if (!apartment?.trim()) {
       setError("Enter your apartment number before creating your account.");
-      return;
-    }
-
-    if (role !== "resident" && !employeeId?.trim()) {
-      setError("Enter your employee ID before creating your account.");
       return;
     }
 
@@ -78,9 +72,7 @@ export default function CompleteSignup() {
       phone: draft.phone.trim(),
       society_id: societyId,
       role: signupRole,
-      ...(signupRole === "resident"
-        ? { apartment: apartment.trim() }
-        : { employee_id: employeeId.trim() }),
+      apartment: apartment.trim(),
     };
 
     try {
@@ -131,15 +123,7 @@ export default function CompleteSignup() {
         return;
       }
 
-      const dashboard =
-        signupRole === "admin"
-          ? "/admin-dashboard"
-          : signupRole === "resident"
-            ? "/resident-dashboard"
-            : signupRole === "security"
-              ? "/security-dashboard"
-              : "/maintenance-dashboard";
-      router.replace(dashboard);
+      router.replace("/resident-dashboard");
     } catch (signupError) {
       setError(
         signupError instanceof Error
@@ -237,7 +221,7 @@ export default function CompleteSignup() {
         Creating Your Account
       </Text>
       <Text style={styles.pageSubtitle}>
-        Please wait while we set up your GATED account.
+        Please wait while we set up your Apartment Tracker account.
       </Text>
     </View>
   );

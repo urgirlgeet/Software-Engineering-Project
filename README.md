@@ -77,9 +77,8 @@ in the Supabase SQL Editor (or apply it through your Supabase migration
 workflow). It adds the apartment lookup RPC and creates the user profile when
 an Auth account is created. This server-side creation is needed when email
 confirmation is enabled, because an unconfirmed user has no session to insert a
-profile from the app. New accounts of every role can sign in without
-administrator approval. Email confirmation, if enabled in Supabase Auth, is
-still required.
+profile from the app. New resident accounts can sign in without administrator
+approval. Email confirmation, if enabled in Supabase Auth, is still required.
 
 If you already applied this migration before approval-free sign-in was enabled,
 run the updated migration again to stop creating pending admin approval
@@ -94,8 +93,24 @@ repair or remove those accounts in Supabase Auth before asking those users to
 retry signup.
 
 After applying it, populate `societies` and `apartments` with real registry
-data. Security and maintenance roles currently allow open self-registration,
-as selected for this project; employee IDs are stored but are not checked
-against a staff registry. Use restrictive database row-level security policies
-for staff-only data and operations. The app does not check administrator
+data. Self-signup is limited to resident accounts in the services migration.
+Create administrator, security, and maintenance profiles through the Supabase
+Admin API with `app_metadata.provisioned_by_admin` set to `true`; never expose
+that service-role capability to the client. Employee IDs are stored but are
+not checked against a staff registry. The app does not check administrator
 approval status when routing users to their dashboards.
+
+## Apartment services backend setup
+
+Before using notices, facility reservations, or maintenance bills, apply
+[`supabase/migrations/20261124120000_apartment_services.sql`](./supabase/migrations/20261124120000_apartment_services.sql)
+in the Supabase SQL Editor or through your migration workflow. It creates
+society-scoped notices and reservations, apartment-scoped bills, and
+role-based row-level security policies. Administrators can publish notices
+and create one bill per flat per billing month; residents can reserve
+facilities and view or mark their flat's bills as paid. The payment action is
+for demonstration only and does not transfer money.
+
+These features use new tables rather than importing records from existing
+`notices` or `amenity_bookings` tables. Migrate any existing records separately
+if they need to appear in the new app screens.

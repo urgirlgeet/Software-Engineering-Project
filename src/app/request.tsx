@@ -723,7 +723,6 @@ const styles = StyleSheet.create({
 
   statusTitle: {
     color: colors.darkBrown,
-    fontFamily: "Georgia",
     fontSize: 23,
     fontWeight: "700",
     marginTop: 17,
@@ -807,7 +806,6 @@ const styles = StyleSheet.create({
 
   title: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 25,
     fontWeight: "700",
   },
@@ -988,7 +986,6 @@ const styles = StyleSheet.create({
 
   categoryMenuTitle: {
     color: colors.darkBrown,
-    fontFamily: "Georgia",
     fontSize: 17,
     marginBottom: 8,
   },

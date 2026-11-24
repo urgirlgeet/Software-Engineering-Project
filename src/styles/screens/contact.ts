@@ -26,7 +26,6 @@ export const contactStyles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 32,
     fontWeight: "700",
   },

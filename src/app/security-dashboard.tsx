@@ -14,6 +14,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
 import QuickActionCard from "../components/resident/QuickActionCard";
+import AppNavigation from "../components/AppNavigation";
 
 type Profile = {
   name: string | null;
@@ -85,11 +86,6 @@ export default function SecurityDashboard() {
     }
   };
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/");
-  };
-
   if (loading) {
     return (
       <View style={dashboardStyles.loadingContainer}>
@@ -106,43 +102,15 @@ export default function SecurityDashboard() {
         contentContainerStyle={dashboardStyles.container}
         showsVerticalScrollIndicator={false}
       >
-        <View style={dashboardStyles.topBar}>
-          <View>
-            <Text style={dashboardStyles.pageTitle}>GATED</Text>
-            <Text style={dashboardStyles.pageSubtitle}>SECURITY PORTAL</Text>
-          </View>
-
-          <Pressable
-            onPress={() => router.replace("/")}
-            style={dashboardStyles.homeMark}
-            accessibilityRole="button"
-            accessibilityLabel="Go to home"
-          >
-            <SymbolView
-              name={{ ios: "house.fill", android: "home", web: "home" }}
-              tintColor={dashboardColors.white}
-              size={18}
-            />
-          </Pressable>
-        </View>
-
-        <View style={dashboardStyles.profileBanner}>
-          <View style={dashboardStyles.profileCopy}>
-            <Text style={dashboardStyles.bannerEyebrow}>SECURITY DESK</Text>
-
-            <Text style={dashboardStyles.greeting}>
-              Hello, {profile.name || "Security Staff"}
-            </Text>
-
-            <View style={dashboardStyles.addressLine}>
-              <SymbolView
-                name={{ ios: "building.2", android: "business", web: "business" }}
-                tintColor={dashboardColors.brown}
-                size={15}
-              />
-              <Text style={dashboardStyles.address}>{societyName}</Text>
-            </View>
-          </View>
+        <AppNavigation role="security" active="Home" />
+        <View style={dashboardStyles.welcome}>
+          <Text style={dashboardStyles.eyebrow}>SOCIETY SERVICES</Text>
+          <Text style={dashboardStyles.welcomeTitle}>
+            Hello, {profile.name || "Security Staff"}
+          </Text>
+          <Text style={dashboardStyles.welcomeSubtitle}>
+            Security portal · {societyName}
+          </Text>
         </View>
 
         <View style={dashboardStyles.sectionHeading}>
@@ -195,30 +163,6 @@ export default function SecurityDashboard() {
           />
         </View>
 
-        <View style={dashboardStyles.sectionHeading}>
-          <View style={dashboardStyles.sectionTitleWrap}>
-            <Text style={dashboardStyles.sectionTitle}>Account</Text>
-          </View>
-        </View>
-
-        <Pressable style={dashboardStyles.requestShortcut} onPress={logout}>
-          <SymbolView
-            name={{
-              ios: "rectangle.portrait.and.arrow.right",
-              android: "logout",
-              web: "logout",
-            }}
-            tintColor={dashboardColors.brown}
-            size={18}
-          />
-          <Text style={dashboardStyles.requestShortcutText}>Sign Out</Text>
-
-          <SymbolView
-            name={{ ios: "arrow.right", android: "arrow_forward", web: "arrow_forward" }}
-            tintColor={dashboardColors.brown}
-            size={18}
-          />
-        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );

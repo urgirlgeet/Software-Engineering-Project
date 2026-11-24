@@ -9,10 +9,10 @@ import {
   View,
 } from "react-native";
 
+import AppNavigation from "../components/AppNavigation";
 import ComplaintCard, {
   AdminComplaint,
 } from "../components/admin/ComplaintCard";
-import BackButton from "../components/BackButton";
 import { supabase } from "../lib/supabase";
 import { dashboardStyles } from "../styles/dashboardStyles";
 
@@ -83,11 +83,14 @@ export default function Complaints() {
         contentContainerStyle={dashboardStyles.container}
         showsVerticalScrollIndicator={false}
       >
-        <BackButton onPress={() => router.back()} />
+        <AppNavigation role="admin" active="Complaints" />
 
-        <View style={dashboardStyles.sectionHeading}>
+        <View style={[dashboardStyles.sectionHeading, { marginTop: 38 }]}>
           <View style={dashboardStyles.sectionTitleWrap}>
-            <Text style={dashboardStyles.sectionTitle}>Society Complaints</Text>
+            <View>
+              <Text style={dashboardStyles.eyebrow}>SERVICE REQUESTS</Text>
+              <Text style={dashboardStyles.welcomeTitle}>Complaints</Text>
+            </View>
             <Text style={dashboardStyles.count}>{complaints.length}</Text>
           </View>
         </View>

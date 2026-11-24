@@ -106,7 +106,7 @@ export default function Details() {
         <View style={styles.authHeader}>
           <BrandMark />
 
-          <Text style={styles.eyebrow}>GATED LIVING SANCTUARY</Text>
+          <Text style={styles.eyebrow}>APARTMENT TRACKER</Text>
 
           <Text style={styles.pageTitle}>{getTitle()}</Text>
 

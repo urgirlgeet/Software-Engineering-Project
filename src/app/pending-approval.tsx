@@ -19,7 +19,7 @@ export default function PendingApproval() {
         <View style={{ width: "100%", maxWidth: 520, alignSelf: "center" }}>
           <View style={styles.pendingTopBar}>
             <BrandMark size={26} />
-            <Text style={styles.pendingBrandText}>GATED</Text>
+            <Text style={styles.pendingBrandText}>Apartment Tracker</Text>
             <View style={styles.pendingPortalMark}>
               <SymbolView
                 name={{

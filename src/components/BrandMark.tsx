@@ -9,7 +9,11 @@ type BrandMarkProps = {
 
 export default function BrandMark({ size = 32 }: BrandMarkProps) {
   return (
-    <View style={styles.logoTile} accessible accessibilityLabel="GATED">
+    <View
+      style={styles.logoTile}
+      accessible
+      accessibilityLabel="Apartment Tracker"
+    >
       <SymbolView
         name={{
           ios: "door.left.hand.open",

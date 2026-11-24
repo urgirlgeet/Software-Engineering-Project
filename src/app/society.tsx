@@ -82,10 +82,11 @@ export default function Society() {
     }
 
     router.push({
-      pathname: "/role",
+      pathname: "/details",
       params: {
         society: society.name,
         societyId: society.id,
+        role: "resident",
       },
     });
   };
@@ -109,7 +110,7 @@ export default function Society() {
             size={32}
           />
         </View>
-        <Text style={styles.eyebrow}>GATED LIVING</Text>
+        <Text style={styles.eyebrow}>APARTMENT TRACKER</Text>
         <Text style={styles.title}>Choose Your Society</Text>
         <Text style={styles.subtitle}>
           Select your residential community to continue.

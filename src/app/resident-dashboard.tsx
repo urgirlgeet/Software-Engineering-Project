@@ -11,13 +11,12 @@ import {
     View,
 } from "react-native";
 
+import AppNavigation from "../components/AppNavigation";
 import { supabase } from "../lib/supabase";
 import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
 
 import QuickActionCard from "../components/resident/QuickActionCard";
 import RequestCard, { RequestItem } from "../components/resident/RequestCard";
-import ResidentBottomNav from "../components/resident/ResidentBottomNav";
-import ResidentHeader from "../components/resident/ResidentHeader";
 import SectionHeading from "../components/resident/SectionHeading";
 
 type Profile = {
@@ -28,9 +27,9 @@ type Profile = {
 
 type Booking = {
   id: string;
-  booking_date: string;
-  start_time: string;
-  end_time: string;
+  facility: string;
+  start_at: string;
+  end_at: string;
   status: string;
 };
 
@@ -152,19 +151,22 @@ export default function ResidentDashboard() {
       );
 
       const { data: bookingData, error: bookingError } = await supabase
-        .from("amenity_bookings")
-        .select("id, booking_date, start_time, end_time, status")
+        .from("facility_reservations")
+        .select("id, facility, start_at, end_at, status")
         .eq("resident_id", userProfile.id)
-        .order("booking_date", { ascending: true })
+        .eq("status", "BOOKED")
+        .gte("start_at", new Date().toISOString())
+        .order("start_at", { ascending: true })
         .limit(3);
 
       if (bookingError) {
         console.log("Booking fetch error:", bookingError);
+        Alert.alert("Unable to load bookings", bookingError.message);
       }
       setBookings(bookingData || []);
 
       const { data: noticeData, error: noticeError } = await supabase
-        .from("notices")
+        .from("apartment_notices")
         .select("id, title, priority, created_at")
         .eq("society_id", userProfile.society_id)
         .order("created_at", { ascending: false })
@@ -172,6 +174,7 @@ export default function ResidentDashboard() {
 
       if (noticeError) {
         console.log("Notice fetch error:", noticeError);
+        Alert.alert("Unable to load notices", noticeError.message);
       }
       setNotices(noticeData || []);
     } catch (error) {
@@ -187,11 +190,6 @@ export default function ResidentDashboard() {
       void loadDashboard();
     }, [loadDashboard]),
   );
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/");
-  };
 
   if (loading) {
     return (
@@ -209,14 +207,22 @@ export default function ResidentDashboard() {
         contentContainerStyle={dashboardStyles.container}
         showsVerticalScrollIndicator={false}
       >
-        <ResidentHeader
-          name={profile.name || "Resident"}
-          apartment={profile.apartment_number || ""}
-          society={societyName}
-          onLogout={logout}
-        />
+        <AppNavigation role="resident" active="Home" />
 
-        <SectionHeading title="Immediate Actions" count="4" />
+        <View style={dashboardStyles.welcome}>
+          <Text style={dashboardStyles.eyebrow}>SOCIETY SERVICES</Text>
+          <Text style={dashboardStyles.welcomeTitle}>
+            Hello, {profile.name || "Resident"}
+          </Text>
+          {!!profile.apartment_number && (
+            <Text style={dashboardStyles.welcomeSubtitle}>
+              {profile.apartment_number}
+            </Text>
+          )}
+          <Text style={dashboardStyles.welcomeSubtitle}>Resident dashboard</Text>
+        </View>
+
+        <SectionHeading title="Society services" />
 
         <View style={dashboardStyles.actionGrid}>
           <QuickActionCard
@@ -225,8 +231,8 @@ export default function ResidentDashboard() {
               android: "chat_bubble",
               web: "chat_bubble",
             }}
-            title="Raise Complaint"
-            detail="Report an issue"
+            title="Complaints"
+            detail="Raise an issue and follow it through the resolution process."
             onPress={() =>
               router.push({
                 pathname: "/request",
@@ -236,28 +242,24 @@ export default function ResidentDashboard() {
           />
 
           <QuickActionCard
-            icon={{
-              ios: "person.badge.plus",
-              android: "person_add",
-              web: "person_add",
-            }}
-            title="Invite Visitor"
-            detail="Create visitor pass"
-            onPress={() => router.push("/visitors" as any)}
+            icon={{ ios: "megaphone", android: "campaign", web: "campaign" }}
+            title="Notice board"
+            detail="Read society updates and important announcements."
+            onPress={() => router.push("/notices")}
+          />
+
+          <QuickActionCard
+            icon={{ ios: "calendar", android: "calendar_month", web: "calendar_month" }}
+            title="Facility booking"
+            detail="Reserve shared facilities and review bookings."
+            onPress={() => router.push("/explore")}
           />
 
           <QuickActionCard
             icon={{ ios: "creditcard", android: "credit_card", web: "credit_card" }}
-            title="Pay Dues"
-            detail="View pending payments"
-            onPress={() => router.push("/bills" as any)}
-          />
-
-          <QuickActionCard
-            icon={{ ios: "leaf", android: "park", web: "park" }}
-            title="Community Services"
-            detail="Explore resident tools"
-            onPress={() => router.push("/explore")}
+            title="Maintenance bills"
+            detail="View your flat's bills and outstanding balance."
+            onPress={() => router.push("/bills")}
           />
         </View>
 
@@ -277,15 +279,15 @@ export default function ResidentDashboard() {
             <View key={booking.id} style={dashboardStyles.bookingCard}>
               <View style={dashboardStyles.bookingHeader}>
                 <Text style={dashboardStyles.bookingTitle}>
-                  Amenity reservation
+                  {booking.facility}
                 </Text>
                 <Text style={dashboardStyles.confirmedText}>
                   {booking.status}
                 </Text>
               </View>
               <Text style={dashboardStyles.bookingMeta}>
-                {new Date(booking.booking_date).toLocaleDateString()} ·{" "}
-                {booking.start_time} – {booking.end_time}
+                {new Date(booking.start_at).toLocaleString()} –{" "}
+                {new Date(booking.end_at).toLocaleTimeString()}
               </Text>
               <Text style={dashboardStyles.bookingCode}>
                 Managed through the society amenity registry
@@ -409,10 +411,6 @@ export default function ResidentDashboard() {
         </View>
       </ScrollView>
 
-      <ResidentBottomNav
-        active="Home"
-        onNavigate={(route) => router.push(route as any)}
-      />
     </SafeAreaView>
   );
 }

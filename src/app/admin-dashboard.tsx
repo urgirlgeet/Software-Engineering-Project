@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 
+import AppNavigation from "../components/AppNavigation";
 import { supabase } from "../lib/supabase";
 import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
 
@@ -159,11 +160,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.replace("/");
-  };
-
   if (checking) {
     return (
       <View style={dashboardStyles.loadingContainer}>
@@ -184,55 +180,58 @@ export default function AdminDashboard() {
         contentContainerStyle={dashboardStyles.container}
         showsVerticalScrollIndicator={false}
       >
-        <View style={dashboardStyles.topBar}>
-          <View>
-            <Text style={dashboardStyles.pageTitle}>GATED</Text>
+        <AppNavigation role="admin" active="Home" />
 
-            <Text style={dashboardStyles.pageSubtitle}>
-              SOCIETY ADMINISTRATION
-            </Text>
-          </View>
-
-          <Pressable
-            style={dashboardStyles.homeMark}
-            onPress={() => router.push("/admin-dashboard")}
-          >
-            <SymbolView
-              name={{
-                ios: "house.fill",
-                android: "home",
-                web: "home",
-              }}
-              tintColor={dashboardColors.peachStrong}
-              size={18}
-            />
-          </Pressable>
+        <View style={dashboardStyles.welcome}>
+          <Text style={dashboardStyles.eyebrow}>SOCIETY SERVICES</Text>
+          <Text style={dashboardStyles.welcomeTitle}>Hello, {profile.name}</Text>
+          <Text style={dashboardStyles.welcomeSubtitle}>
+            Administrator dashboard{societyName ? ` · ${societyName}` : ""}
+          </Text>
         </View>
 
-        <View style={dashboardStyles.profileBanner}>
-          <View style={dashboardStyles.profileCopy}>
-            <Text style={dashboardStyles.bannerEyebrow}>SOCIETY ADMIN</Text>
-
-            <Text style={dashboardStyles.greeting}>
-              Welcome, {profile.name}
-            </Text>
-
-            <View style={dashboardStyles.addressLine}>
-              <SymbolView
-                name={{
-                  ios: "building.2",
-                  android: "business",
-                  web: "business",
-                }}
-                tintColor={dashboardColors.brown}
-                size={15}
-              />
-
-              <Text style={dashboardStyles.address}>
-                {societyName || "Society"}
-              </Text>
-            </View>
+        <View style={dashboardStyles.sectionHeading}>
+          <View style={dashboardStyles.sectionTitleWrap}>
+            <Text style={dashboardStyles.sectionTitle}>Society services</Text>
           </View>
+        </View>
+
+        <View style={dashboardStyles.actionGrid}>
+          <AdminAction
+            icon={{
+              ios: "exclamationmark.bubble",
+              android: "chat_bubble",
+              web: "chat_bubble",
+            }}
+            title="Complaints"
+            detail="Raise an issue and follow it through the resolution process."
+            onPress={() => router.push("/complaints")}
+          />
+
+          <AdminAction
+            icon={{ ios: "megaphone", android: "campaign", web: "campaign" }}
+            title="Notice board"
+            detail="Read society updates and important announcements."
+            onPress={() => router.push("/notices")}
+          />
+
+          <AdminAction
+            icon={{
+              ios: "calendar",
+              android: "calendar_month",
+              web: "calendar_month",
+            }}
+            title="Facility booking"
+            detail="Reserve shared facilities and review upcoming bookings."
+            onPress={() => router.push("/explore")}
+          />
+
+          <AdminAction
+            icon={{ ios: "creditcard", android: "credit_card", web: "credit_card" }}
+            title="Billing dashboard"
+            detail="Create bills and review collected and outstanding balances."
+            onPress={() => router.push("/bills")}
+          />
         </View>
 
         <View style={dashboardStyles.sectionHeading}>
@@ -249,51 +248,14 @@ export default function AdminDashboard() {
               web: "person_add",
             }}
             title="Approvals"
-            detail="Review resident access"
+            detail="Review resident access requests."
             onPress={() => router.push("/admin-approvals")}
           />
-
-          <AdminAction
-            icon={{ ios: "person.3", android: "groups", web: "groups" }}
-            title="Residents"
-            detail="Manage society residents"
-            onPress={() => router.push("/residents" as any)}
-          />
-
-          <AdminAction
-            icon={{
-              ios: "exclamationmark.bubble",
-              android: "chat_bubble",
-              web: "chat_bubble",
-            }}
-            title="Complaints"
-            detail="Manage resident complaints"
-            onPress={() => router.push("/complaints" as any)}
-          />
-
           <AdminAction
             icon={{ ios: "wrench.and.screwdriver", android: "build", web: "build" }}
-            title="Maintenance"
-            detail="Monitor maintenance work"
+            title="Maintenance team"
+            detail="Monitor assigned maintenance work."
             onPress={() => router.push("/maintenance-dashboard")}
-          />
-
-          <AdminAction
-            icon={{ ios: "megaphone", android: "campaign", web: "campaign" }}
-            title="Announcements"
-            detail="Manage society notices"
-            onPress={() => router.push("/notices" as any)}
-          />
-
-          <AdminAction
-            icon={{
-              ios: "shield.lefthalf.filled",
-              android: "security",
-              web: "security",
-            }}
-            title="Security"
-            detail="Monitor gate activity"
-            onPress={() => router.push("/security-dashboard")}
           />
         </View>
 
@@ -328,55 +290,6 @@ export default function AdminDashboard() {
             />
           ))
         )}
-
-        <View style={dashboardStyles.sectionHeading}>
-          <View style={dashboardStyles.sectionTitleWrap}>
-            <Text style={dashboardStyles.sectionTitle}>Society Management</Text>
-          </View>
-        </View>
-
-        <Pressable
-          style={dashboardStyles.requestCard}
-          onPress={() => router.push("/society" as any)}
-        >
-          <View style={dashboardStyles.requestHeader}>
-            <SymbolView
-              name={{
-                ios: "building.2.fill",
-                android: "business",
-                web: "business",
-              }}
-              tintColor={dashboardColors.brown}
-              size={21}
-            />
-
-            <Text style={[dashboardStyles.requestTitle, { marginLeft: 10 }]}>
-              Society Information
-            </Text>
-          </View>
-
-          <Text style={dashboardStyles.requestDate}>
-            View and manage society information
-          </Text>
-        </Pressable>
-
-        <Pressable style={dashboardStyles.requestCard} onPress={handleSignOut}>
-          <View style={dashboardStyles.requestHeader}>
-            <SymbolView
-              name={{
-                ios: "rectangle.portrait.and.arrow.right",
-                android: "logout",
-                web: "logout",
-              }}
-              tintColor={dashboardColors.brown}
-              size={21}
-            />
-
-            <Text style={[dashboardStyles.requestTitle, { marginLeft: 10 }]}>
-              Sign Out
-            </Text>
-          </View>
-        </Pressable>
 
         <View style={{ height: 70 }} />
       </ScrollView>

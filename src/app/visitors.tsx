@@ -89,7 +89,7 @@ export default function Visitors() {
           </Pressable>
 
           <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>GATED</Text>
+            <Text style={styles.eyebrow}>APARTMENT TRACKER</Text>
             <Text style={styles.title}>Visitor Pass</Text>
           </View>
         </View>
@@ -224,13 +224,11 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     color: colors.brown,
-    fontFamily: "Georgia",
     fontSize: 12,
     letterSpacing: 1.5,
   },
   title: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 28,
     fontWeight: "700",
     marginTop: 4,
@@ -247,7 +245,6 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 14,

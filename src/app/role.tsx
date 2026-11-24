@@ -23,38 +23,8 @@ const roles: {
   {
     id: "resident",
     title: "Resident",
-    description: "Resident of the society",
+    description: "I live in this society",
     icon: { ios: "person", android: "person", web: "person" },
-  },
-  {
-    id: "admin",
-    title: "Society Admin",
-    description: "Manage and administer the society",
-    icon: {
-      ios: "person.badge.key",
-      android: "admin_panel_settings",
-      web: "admin_panel_settings",
-    },
-  },
-  {
-    id: "security",
-    title: "Security",
-    description: "Security staff of the society",
-    icon: {
-      ios: "shield.lefthalf.filled",
-      android: "security",
-      web: "security",
-    },
-  },
-  {
-    id: "maintenance",
-    title: "Maintenance",
-    description: "Maintenance staff of the society",
-    icon: {
-      ios: "wrench.and.screwdriver",
-      android: "build",
-      web: "build",
-    },
   },
 ];
 
@@ -97,7 +67,7 @@ export default function Role() {
           <View style={styles.authHeader}>
             <BrandMark />
 
-            <Text style={styles.eyebrow}>GATED LIVING SANCTUARY</Text>
+            <Text style={styles.eyebrow}>APARTMENT TRACKER</Text>
 
             <Text style={styles.pageTitle}>Choose Your Role</Text>
 

@@ -37,22 +37,51 @@ export const dashboardStyles = StyleSheet.create({
   },
 
   container: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    alignSelf: "center",
+    maxWidth: 1120,
+    paddingHorizontal: 24,
+    paddingTop: 30,
     paddingBottom: 84,
+    width: "100%",
+  },
+
+  welcome: {
+    marginBottom: 8,
+    marginTop: 42,
+  },
+
+  eyebrow: {
+    color: dashboardColors.brown,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    marginBottom: 8,
+  },
+
+  welcomeTitle: {
+    color: dashboardColors.ink,
+    fontSize: 38,
+    fontWeight: "800",
+    letterSpacing: -1,
+  },
+
+  welcomeSubtitle: {
+    color: dashboardColors.muted,
+    fontSize: 15,
+    marginTop: 5,
   },
 
   topBar: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 14,
+    marginBottom: 30,
   },
 
   pageTitle: {
     color: dashboardColors.ink,
-    fontFamily: "Georgia",
-    fontSize: 20,
+    fontSize: 17,
+    fontWeight: "800",
   },
 
   pageSubtitle: {
@@ -78,14 +107,14 @@ export const dashboardStyles = StyleSheet.create({
   },
 
   profileBanner: {
-    backgroundColor: dashboardColors.peach,
+    backgroundColor: dashboardColors.white,
     borderColor: dashboardColors.border,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    minHeight: 113,
-    padding: 19,
+    minHeight: 105,
+    padding: 24,
   },
 
   profileCopy: {
@@ -100,8 +129,8 @@ export const dashboardStyles = StyleSheet.create({
 
   greeting: {
     color: dashboardColors.ink,
-    fontFamily: "Georgia",
-    fontSize: 22,
+    fontSize: 30,
+    fontWeight: "800",
     marginTop: 8,
   },
 
@@ -157,8 +186,8 @@ export const dashboardStyles = StyleSheet.create({
 
   sectionTitle: {
     color: dashboardColors.ink,
-    fontFamily: "Georgia",
-    fontSize: 20,
+    fontSize: 19,
+    fontWeight: "700",
   },
 
   count: {
@@ -186,10 +215,10 @@ export const dashboardStyles = StyleSheet.create({
   actionCard: {
     backgroundColor: dashboardColors.white,
     borderColor: dashboardColors.border,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    minHeight: 116,
-    padding: 14,
+    minHeight: 170,
+    padding: 24,
     width: "48%",
     shadowColor: dashboardColors.brown,
     shadowOpacity: 0.04,
@@ -204,22 +233,24 @@ export const dashboardStyles = StyleSheet.create({
   actionIcon: {
     alignItems: "center",
     backgroundColor: dashboardColors.peachStrong,
-    borderRadius: 22,
-    height: 39,
+    borderRadius: 11,
+    height: 40,
     justifyContent: "center",
-    width: 39,
+    width: 40,
   },
 
   actionTitle: {
     color: dashboardColors.ink,
-    fontSize: 16,
-    marginTop: 12,
+    fontSize: 18,
+    fontWeight: "700",
+    marginTop: 16,
   },
 
   actionDetail: {
     color: dashboardColors.muted,
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
   },
 
   requestCard: {
@@ -264,8 +295,8 @@ export const dashboardStyles = StyleSheet.create({
 
   bookingTitle: {
     color: dashboardColors.ink,
-    fontFamily: "Georgia",
     fontSize: 17,
+    fontWeight: "700",
   },
 
   bookingMeta: {

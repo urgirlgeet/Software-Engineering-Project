@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 
+import AppNavigation from "../components/AppNavigation";
 import { supabase } from "../lib/supabase";
 import { dashboardColors, dashboardStyles } from "../styles/dashboardStyles";
 
@@ -103,11 +104,6 @@ export default function MaintenanceDashboard() {
     }, [loadDashboard]),
   );
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.replace("/");
-  };
-
   if (checking) {
     return (
       <View style={dashboardStyles.loadingContainer}>
@@ -128,39 +124,15 @@ export default function MaintenanceDashboard() {
         contentContainerStyle={dashboardStyles.container}
         showsVerticalScrollIndicator={false}
       >
-        <View style={dashboardStyles.topBar}>
-          <View>
-            <Text style={dashboardStyles.pageTitle}>GATED</Text>
-
-            <Text style={dashboardStyles.pageSubtitle}>MAINTENANCE</Text>
-          </View>
-
-          <Pressable
-            style={dashboardStyles.homeMark}
-            onPress={() => router.push("/maintenance-dashboard")}
-          >
-            <SymbolView
-              name={{ ios: "house.fill", android: "home", web: "home" }}
-              tintColor={dashboardColors.white}
-              size={18}
-            />
-          </Pressable>
-        </View>
-
-        <View style={dashboardStyles.profileBanner}>
-          <View style={dashboardStyles.profileCopy}>
-            <Text style={dashboardStyles.bannerEyebrow}>MAINTENANCE STAFF</Text>
-
-            <Text style={dashboardStyles.greeting}>
-              Welcome, {profile.name}
-            </Text>
-
-            <Text
-              style={[dashboardStyles.address, { marginLeft: 0, marginTop: 5 }]}
-            >
-              {societyName}
-            </Text>
-          </View>
+        <AppNavigation role="maintenance" active="Home" />
+        <View style={dashboardStyles.welcome}>
+          <Text style={dashboardStyles.eyebrow}>SOCIETY SERVICES</Text>
+          <Text style={dashboardStyles.welcomeTitle}>
+            Hello, {profile.name}
+          </Text>
+          <Text style={dashboardStyles.welcomeSubtitle}>
+            Maintenance team dashboard{societyName ? ` · ${societyName}` : ""}
+          </Text>
         </View>
 
         <View style={dashboardStyles.sectionHeading}>
@@ -211,23 +183,6 @@ export default function MaintenanceDashboard() {
           <Text style={[dashboardStyles.requestDate, { marginTop: 5 }]}>
             View society announcements
           </Text>
-        </Pressable>
-
-        <Pressable style={dashboardStyles.requestCard} onPress={handleSignOut}>
-          <View style={dashboardStyles.requestHeader}>
-            <SymbolView
-              name={{
-                ios: "rectangle.portrait.and.arrow.right",
-                android: "logout",
-                web: "logout",
-              }}
-              tintColor={dashboardColors.brown}
-              size={19}
-            />
-            <Text style={[dashboardStyles.requestTitle, { marginLeft: 10 }]}>
-              Sign Out
-            </Text>
-          </View>
         </Pressable>
 
         <View style={{ height: 70 }} />

@@ -24,14 +24,12 @@ export const societyStyles = StyleSheet.create({
   },
   eyebrow: {
     color: colors.copper,
-    fontFamily: "Georgia",
     fontSize: 12,
     letterSpacing: 1.5,
     marginBottom: 8,
   },
   title: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 32,
     fontWeight: "700",
     textAlign: "center",
@@ -58,7 +56,6 @@ export const societyStyles = StyleSheet.create({
   sectionTitle: {
     color: colors.ink,
     flex: 1,
-    fontFamily: "Georgia",
     fontSize: 18,
     fontWeight: "700",
     marginLeft: 10,

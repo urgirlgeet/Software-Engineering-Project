@@ -38,7 +38,6 @@ export const adminApprovalsStyles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 30,
     fontWeight: "700",
   },
@@ -49,7 +48,6 @@ export const adminApprovalsStyles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 19,
     fontWeight: "700",
     marginTop: 15,

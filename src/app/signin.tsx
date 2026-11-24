@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import {
     Alert,
@@ -14,8 +13,6 @@ import {
 
 import { supabase } from "../lib/supabase";
 import { colors, styles } from "../styles/theme";
-import BrandMark from "../components/BrandMark";
-import BackButton from "../components/BackButton";
 
 export default function SignIn() {
   const router = useRouter();
@@ -101,55 +98,39 @@ export default function SignIn() {
       <StatusBar style="dark" />
 
       <View style={styles.authContainer}>
-        <BackButton onPress={() => router.back()} style={styles.backButton} />
-
         <View style={styles.authContent}>
           <View style={styles.authHeader}>
-            <BrandMark />
-
-            <Text style={styles.pageTitle}>Welcome Back</Text>
-
-            <Text style={styles.pageSubtitle}>Sign in to GATED</Text>
+            <Text style={styles.authBrand}>APARTMENT TRACKER</Text>
+            <Text style={[styles.pageTitle, styles.authTitle]}>
+              Welcome back
+            </Text>
+            <Text style={[styles.pageSubtitle, styles.authSubtitle]}>
+              Sign in to manage your society services.
+            </Text>
           </View>
 
           <View style={styles.form}>
             <Text style={styles.label}>Email</Text>
-
-            <View style={styles.inputWithIcon}>
-              <SymbolView
-                name={{ ios: "envelope", android: "mail", web: "mail" }}
-                tintColor={colors.muted}
-                size={20}
-              />
-              <TextInput
-                style={styles.iconInput}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.placeholder}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor={colors.placeholder}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
 
             <Text style={styles.label}>Password</Text>
-
-            <View style={styles.inputWithIcon}>
-              <SymbolView
-                name={{ ios: "lock", android: "lock", web: "lock" }}
-                tintColor={colors.muted}
-                size={20}
-              />
-              <TextInput
-                style={styles.iconInput}
-                placeholder="Enter your password"
-                placeholderTextColor={colors.placeholder}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              placeholderTextColor={colors.placeholder}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
 
             <TouchableOpacity
               style={[
@@ -171,7 +152,8 @@ export default function SignIn() {
               onPress={() => router.push("/signup")}
             >
               <Text style={styles.signUpText}>
-                Don't have an account? <Text style={styles.link}>Sign Up</Text>
+                New resident?{" "}
+                <Text style={styles.link}>Create an account</Text>
               </Text>
             </TouchableOpacity>
           </View>

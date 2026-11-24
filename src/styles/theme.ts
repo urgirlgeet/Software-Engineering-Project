@@ -7,16 +7,18 @@ export const colors = {
   background: palette.background,
   ink: palette.text,
   brown: palette.primary,
-  copper: "#AE6039",
-  softCopper: palette.peachStrong,
+  copper: palette.primaryDark,
+  softCopper: palette.border,
   peach: palette.input,
   peachStrong: palette.peachStrong,
   muted: palette.textSecondary,
   white: palette.white,
   placeholder: palette.textMuted,
-  selected: "#FFE4DB",
-  shadow: "#6F3D2A",
-  error: "#8B0000",
+  selected: palette.successSurface,
+  warningSurface: palette.warningSurface,
+  shadow: "#172B3A",
+  error: palette.urgent,
+  errorSurface: palette.errorSurface,
 } as const;
 
 export const styles = StyleSheet.create({
@@ -43,7 +45,7 @@ export const styles = StyleSheet.create({
 
   logoTile: {
     alignItems: "center",
-    backgroundColor: "#FFE9E2",
+    backgroundColor: colors.peachStrong,
     borderRadius: 17,
     height: 63,
     justifyContent: "center",
@@ -54,12 +56,12 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderColor: colors.softCopper,
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: 14,
     paddingHorizontal: 20,
     paddingVertical: 20,
     shadowColor: colors.shadow,
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -70,7 +72,7 @@ export const styles = StyleSheet.create({
   primaryButton: {
     alignItems: "center",
     backgroundColor: colors.brown,
-    borderRadius: 13,
+    borderRadius: 8,
     flexDirection: "row",
     height: 56,
     justifyContent: "center",
@@ -79,13 +81,13 @@ export const styles = StyleSheet.create({
   primaryButtonText: {
     color: colors.white,
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 
   secondaryButton: {
     alignItems: "center",
-    backgroundColor: colors.peach,
-    borderRadius: 13,
+    backgroundColor: colors.peachStrong,
+    borderRadius: 8,
     flexDirection: "row",
     height: 56,
     justifyContent: "center",
@@ -99,9 +101,8 @@ export const styles = StyleSheet.create({
 
   pageTitle: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 32,
-    fontWeight: "700",
+    fontWeight: "800",
     textAlign: "center",
   },
 
@@ -149,12 +150,14 @@ export const styles = StyleSheet.create({
   },
 
   input: {
-    backgroundColor: colors.peach,
-    borderRadius: 10,
+    backgroundColor: colors.white,
+    borderColor: colors.softCopper,
+    borderRadius: 8,
+    borderWidth: 1,
     color: colors.ink,
     fontSize: 16,
-    height: 48,
-    paddingHorizontal: 14,
+    height: 46,
+    paddingHorizontal: 12,
   },
 
   disabled: {
@@ -164,7 +167,7 @@ export const styles = StyleSheet.create({
   featureCard: {
     alignItems: "center",
     backgroundColor: colors.white,
-    borderRadius: 16,
+    borderRadius: 14,
     flex: 1,
     paddingHorizontal: 10,
     paddingVertical: 16,
@@ -182,7 +185,6 @@ export const styles = StyleSheet.create({
 
   featureTitle: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 15,
     fontWeight: "700",
     textAlign: "center",
@@ -212,7 +214,6 @@ export const styles = StyleSheet.create({
 
   eyebrow: {
     color: colors.brown,
-    fontFamily: "Georgia",
     fontSize: 12,
     letterSpacing: 1.5,
     marginBottom: 8,
@@ -220,9 +221,8 @@ export const styles = StyleSheet.create({
 
   title: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 42,
-    fontWeight: "700",
+    fontWeight: "800",
     letterSpacing: 2,
   },
 
@@ -273,7 +273,6 @@ export const styles = StyleSheet.create({
 
   networkTitle: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 16,
     fontWeight: "700",
   },
@@ -325,7 +324,6 @@ export const styles = StyleSheet.create({
 
   terms: {
     color: colors.muted,
-    fontFamily: "Georgia",
     fontSize: 11,
     lineHeight: 17,
     marginTop: 13,
@@ -345,7 +343,6 @@ export const styles = StyleSheet.create({
 
   sectionTitle: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 22,
     fontWeight: "700",
     marginLeft: 12,
@@ -353,10 +350,10 @@ export const styles = StyleSheet.create({
 
   inputWithIcon: {
     alignItems: "center",
-    backgroundColor: colors.peach,
+    backgroundColor: colors.white,
     borderColor: colors.softCopper,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 8,
     flexDirection: "row",
     height: 48,
     paddingHorizontal: 13,
@@ -393,7 +390,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.white,
     borderColor: colors.softCopper,
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     flexDirection: "row",
     marginBottom: 12,
@@ -439,14 +436,15 @@ export const styles = StyleSheet.create({
   },
 
   formButton: {
-    marginTop: 30,
+    marginTop: 10,
   },
 
   authContainer: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 28,
-    paddingTop: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
 
   backButton: {
@@ -456,17 +454,46 @@ export const styles = StyleSheet.create({
   },
 
   authContent: {
-    flex: 1,
-    justifyContent: "center",
-    paddingBottom: 70,
+    backgroundColor: colors.white,
+    borderColor: colors.softCopper,
+    borderRadius: 16,
+    borderWidth: 1,
+    maxWidth: 420,
+    padding: 32,
+    shadowColor: colors.shadow,
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    width: "100%",
+    elevation: 3,
   },
 
   authHeader: {
-    alignItems: "center",
-    marginBottom: 35,
+    alignItems: "flex-start",
+    marginBottom: 22,
+  },
+
+  authBrand: {
+    color: colors.brown,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    marginBottom: 8,
+  },
+
+  authTitle: {
+    fontSize: 30,
+    textAlign: "left",
+  },
+
+  authSubtitle: {
+    fontSize: 14,
+    marginTop: 7,
+    textAlign: "left",
   },
 
   form: {
+    gap: 10,
     width: "100%",
   },
 
@@ -536,9 +563,8 @@ export const styles = StyleSheet.create({
 
   pendingTitle: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 34,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
   pendingSubtitle: {
@@ -612,9 +638,8 @@ export const styles = StyleSheet.create({
 
   pendingRequestTitle: {
     color: colors.ink,
-    fontFamily: "Georgia",
     fontSize: 26,
-    fontWeight: "700",
+    fontWeight: "800",
     marginTop: 23,
     textAlign: "center",
   },

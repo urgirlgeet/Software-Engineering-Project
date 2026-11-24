@@ -89,7 +89,7 @@ export default function SignUp() {
         <View style={styles.formHeader}>
           <BrandMark />
 
-          <Text style={styles.eyebrow}>GATED</Text>
+          <Text style={styles.eyebrow}>APARTMENT TRACKER</Text>
 
           <Text style={styles.pageTitle}>Create Account</Text>
 
