@@ -202,10 +202,10 @@ Times are entered as `YYYY-MM-DDTHH:mm` in local time.
 | ID | Scenario | Steps | Expected result | Type | Result |
 | --- | --- | --- | --- | --- | --- |
 | TC-88 | TypeScript type check | `npx tsc --noEmit` | No type errors | Static analysis | Pass (run 25 Nov 2026) |
-| TC-89 | Web build | `npx expo export --platform web` | Static web build completes without errors | Build | |
+| TC-89 | Web build | `npx expo export --platform web` | Static web build completes without errors | Build | Pass (run 25 Nov 2026; 25 routes exported) |
 | TC-90 | Android run | `npx expo start`, open in Expo Go | App launches to Sign In; flows in sections 1–6 work | Compatibility | |
 | TC-91 | API response and dashboard startup targets | Sign in as R1 on a representative 4G/5G/Wi-Fi connection; record timings | Supabase calls complete within 500 ms and the authenticated dashboard is displayed within 2 seconds, as specified by the SRS. Record device, network and timings. | Performance | |
-| TC-92 | No secret keys in client | Search the source for a service-role key | Only the Supabase publishable (anon) key is present | Security | |
+| TC-92 | No secret keys in client | Search the source for a service-role key | Only the Supabase publishable (anon) key is present | Security | Pass (run 25 Nov 2026; no server-role key pattern in `src/`) |
 
 ## Summary
 
