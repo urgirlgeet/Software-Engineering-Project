@@ -1,9 +1,11 @@
 # GATED: Apartment Tracker — Test Cases
 
 This document lists the functional, validation, integration, and security test
-cases for GATED: Apartment Tracker. Each case is traced to a requirement from
-the project proposal (`project-proposal/main.tex`) and the mid-semester report
-(`projectreport/report.tex`).
+cases for GATED: Apartment Tracker. The primary requirements source is the SRS
+(`Software_Requirements_Specification/srs.tex`); the final report
+(`projectreport/final_report.tex`) is used for additional features that were
+added after the SRS. The traceability matrix below identifies the SRS
+sub-requirements and known implementation gaps.
 
 **How to use this document:** run each case against the app (Expo Go, emulator,
 or `npx expo start --web`) connected to a Supabase project with both migrations
@@ -37,6 +39,33 @@ until the feature is completed.
 | NFR-1 | Data is restricted by role and society (Row Level Security) |
 | NFR-2 | The application builds and runs on mobile and web |
 
+## SRS traceability
+
+| SRS requirement | Related cases | Coverage / known gap |
+| --- | --- | --- |
+| FR-1.1: Registration fields and password rules | TC-01–08, TC-17–20 | Field validation, password length, signup and confirmation flows |
+| FR-1.2: Choose one of four roles | TC-08, TC-21, TC-25 | Role selection and role-based routing; verify role choices against the SRS |
+| FR-1.3: Resident apartment belongs to selected society | TC-09–10, TC-14–17 | Registry lookup, invalid flat, normalization and successful signup |
+| FR-1.4 / BR-3: New admin requests remain pending until approved | TC-21 | Requirement is not implemented: admin signup/approval state is not enforced by the current signup flow |
+| FR-2.1: Resident dashboard data | TC-25, TC-34, TC-36, TC-52, TC-59, TC-74, TC-86 | Dashboard/profile data and workflow updates |
+| FR-2.2–2.3: Complaint and maintenance request form and required fields | TC-32–37 | Form validation, categories, priority, description, submission and resident ownership |
+| FR-3.1–3.3: Society complaint listing and assignment | TC-38–41 | Society-scoped listing, staff selection and assigned status |
+| FR-4.1–4.2: Staff assignment scope and status updates | TC-42–48 | Assigned-work visibility, status progression, resolution note and lifecycle |
+| FR-5.1–5.2: Visitor entry and exit logs | TC-82–85 | Partial only: current visitor screen uses in-memory requests; persisted gate entry/exit logs are not implemented |
+| FR-6: Technology stack | TC-88–90 | Type check and platform build/run checks; version/configuration can also be inspected in `package.json` |
+| NFR: 500 ms API response and 2 s startup targets | TC-91 | Measurement is defined but not recorded; requires a representative network/device |
+| NFR: Concurrency and society isolation | TC-53, TC-61–64 | Cross-society visibility and concurrent facility booking |
+| NFR: Authentication, session storage and role isolation | TC-21–31, TC-54, TC-67–68, TC-79–81 | Auth, routing, RLS and role checks; secure-storage requirement needs a separate verification |
+| NFR: Maintainability, usability and reliability | TC-01–20, TC-32–35, TC-56–58, TC-69–73, TC-88 | Validation, typed build and database-backed constraints |
+| BR-1: Resident belongs to one society and apartment | TC-14–17 | Signup registry and profile association |
+| BR-2: Assignment stays within the complaint's society | TC-38, TC-40–42 | Society-scoped staff assignment |
+| BR-4: No overlapping facility bookings | TC-59–68 | Boundary, cross-resident and concurrency cases |
+
+The notices, facility-booking, and billing cases also cover final-report
+features. They extend beyond the detailed feature list in this SRS and are
+retained so the delivered application is tested as well as the original
+requirements.
+
 ---
 
 ## 1. Registration (FR-1)
@@ -63,7 +92,7 @@ until the feature is completed.
 | TC-18 | Successful signup (email confirmation on) | Email confirmation enabled in Supabase Auth | Complete signup | Screen tells the user to confirm the email; dashboard does not open until confirmed and signed in | Functional | |
 | TC-19 | Duplicate email | Email already registered | Complete signup with the same email | Error message from Supabase; no second profile is created | Validation | |
 | TC-20 | Signup details expire on reload | Reach the apartment step | Reload the app (web refresh) then continue | "Your signup details expired. Please start again." (password is held in memory only, by design) | Functional / Security | |
-| TC-21 | Self-signup as admin is blocked | Supabase anon key | Call `auth.signUp` directly with metadata `role: "admin"` | Request fails with "Signups must be residents or provisioned through the trusted admin API." | Security (NFR-1) | |
+| TC-21 | New admin signup remains pending | Fresh admin signup | Register a Society Admin and attempt to use admin functions before approval | Account is pending and cannot perform admin actions until an existing admin approves it (FR-1.4, BR-3). **Known gap:** current signup flow does not enforce this pending/approval workflow; record the observed result as Fail if the account becomes operational. | Functional / Security | |
 
 ## 2. Sign in, routing and sign out (FR-1, FR-2)
 
@@ -173,10 +202,10 @@ Times are entered as `YYYY-MM-DDTHH:mm` in local time.
 | ID | Scenario | Steps | Expected result | Type | Result |
 | --- | --- | --- | --- | --- | --- |
 | TC-88 | TypeScript type check | `npx tsc --noEmit` | No type errors | Static analysis | Pass (run 25 Nov 2026) |
-| TC-89 | Web build | `npx expo export --platform web` | Static web build completes without errors | Build | |
+| TC-89 | Web build | `npx expo export --platform web` | Static web build completes without errors | Build | Pass (run 25 Nov 2026; 25 routes exported) |
 | TC-90 | Android run | `npx expo start`, open in Expo Go | App launches to Sign In; flows in sections 1–6 work | Compatibility | |
-| TC-91 | Dashboard load time | Sign in as R1 on a normal connection | Dashboard data appears within about 3 seconds | Performance | |
-| TC-92 | No secret keys in client | Search the source for a service-role key | Only the Supabase publishable (anon) key is present | Security | |
+| TC-91 | API response and dashboard startup targets | Sign in as R1 on a representative 4G/5G/Wi-Fi connection; record timings | Supabase calls complete within 500 ms and the authenticated dashboard is displayed within 2 seconds, as specified by the SRS. Record device, network and timings. | Performance | |
+| TC-92 | No secret keys in client | Search the source for a service-role key | Only the Supabase publishable (anon) key is present | Security | Pass (run 25 Nov 2026; no server-role key pattern in `src/`) |
 
 ## Summary
 
