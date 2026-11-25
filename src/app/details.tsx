@@ -16,6 +16,12 @@ import {
 import { colors, styles } from "../styles/theme";
 import BrandMark from "../components/BrandMark";
 import BackButton from "../components/BackButton";
+import Dropdown from "../components/Dropdown";
+import {
+  apartmentBlocks,
+  apartmentFlatNumbers,
+  formatApartmentNumber,
+} from "../constants/apartments";
 
 export default function Details() {
   const router = useRouter();
@@ -26,8 +32,11 @@ export default function Details() {
     role: string;
   }>();
 
-  const [apartment, setApartment] = useState("");
+  const [block, setBlock] = useState("");
+  const [flat, setFlat] = useState("");
   const [employeeId, setEmployeeId] = useState("");
+
+  const apartment = block && flat ? formatApartmentNumber(block, flat) : "";
 
   const getTitle = () => {
     switch (role) {
@@ -58,8 +67,8 @@ export default function Details() {
   };
 
   const handleContinue = () => {
-    if (role === "resident" && !apartment.trim()) {
-      Alert.alert("Error", "Please enter your apartment number.");
+    if (role === "resident" && !apartment) {
+      Alert.alert("Error", "Please select your block and flat number.");
       return;
     }
 
@@ -82,7 +91,7 @@ export default function Details() {
         society,
         societyId,
         role,
-        apartment: role === "resident" ? apartment.trim() : "",
+        apartment: role === "resident" ? apartment : "",
         employeeId: role !== "resident" ? employeeId.trim() : "",
       },
     });
@@ -130,23 +139,31 @@ export default function Details() {
 
           {role === "resident" && (
             <>
-              <Text style={styles.label}>Apartment</Text>
+              <Text style={styles.label}>Block</Text>
+              <Dropdown
+                label="Select block"
+                placeholder="Choose block (A–Z)"
+                options={apartmentBlocks}
+                value={block}
+                onChange={setBlock}
+                formatOption={(option) => `Block ${option}`}
+              />
 
-              <View style={styles.inputWithIcon}>
-                <SymbolView
-                  name={{ ios: "door.left.hand.open", android: "door_front", web: "door_front" }}
-                  tintColor={colors.muted}
-                  size={20}
-                />
-                <TextInput
-                  style={styles.iconInput}
-                  placeholder="e.g. A-101"
-                  placeholderTextColor={colors.placeholder}
-                  value={apartment}
-                  onChangeText={setApartment}
-                  autoCapitalize="characters"
-                />
-              </View>
+              <Text style={[styles.label, { marginTop: 14 }]}>Flat number</Text>
+              <Dropdown
+                label="Select flat number"
+                placeholder="Choose flat (1–8)"
+                options={apartmentFlatNumbers}
+                value={flat}
+                onChange={setFlat}
+                formatOption={(option) => `Flat ${option}`}
+              />
+
+              {apartment ? (
+                <Text style={[styles.pageSubtitle, { marginTop: 10 }]}>
+                  Apartment: {apartment}
+                </Text>
+              ) : null}
             </>
           )}
 

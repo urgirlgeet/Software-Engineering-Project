@@ -56,12 +56,15 @@ REVOKE ALL ON FUNCTION public.lookup_signup_apartment(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.lookup_signup_apartment(uuid, text)
   TO anon, authenticated;
 
+-- Blocks A-Z with flats 1-8 ("A-1" ... "Z-8"), matching the signup
+-- dropdowns in src/app/details.tsx.
 WITH demo_apartments(flat_number, block_name, floor_number) AS (
-  VALUES
-    ('A-101', 'A', 1),
-    ('A-102', 'A', 1),
-    ('B-201', 'B', 2),
-    ('B-202', 'B', 2)
+  SELECT
+    chr(64 + block_index) || '-' || flat_index,
+    chr(64 + block_index),
+    NULL::integer
+  FROM generate_series(1, 26) AS block_index
+  CROSS JOIN generate_series(1, 8) AS flat_index
 )
 INSERT INTO public.apartments (
   id,

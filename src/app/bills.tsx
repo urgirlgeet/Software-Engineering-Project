@@ -341,7 +341,7 @@ export default function Bills() {
               style={styles.input}
               value={flatNumber}
               onChangeText={setFlatNumber}
-              placeholder="e.g. A-101"
+              placeholder="e.g. A-1"
               placeholderTextColor={colors.placeholder}
               autoCapitalize="characters"
             />
